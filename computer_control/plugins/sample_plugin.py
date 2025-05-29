@@ -1,3 +1,2 @@
-from ..core.logger import info
-def on_start(goal): info(f"[plugin] starting objective: {goal}")
-def on_thought(op): info(f"[plugin] LLM decided: {op.get('operation')}")
+def on_start(goal): print("[plugin] starting:", goal)
+def on_thought(op): print("[plugin] thought:", op.get("thought",""))
