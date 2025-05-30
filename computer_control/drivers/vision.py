@@ -39,3 +39,11 @@ def attach(assistant_json: str):
             {"type": "image_url",
              "image_url": {"url": f"data:image/png;base64,{data_b64}"}}]}
     ]
+
+# ------------------------------------------------------------------
+# Back-compat for manager.snap()
+def snap() -> str:
+    """Return base-64 PNG (legacy)."""
+    import base64
+    return base64.b64encode(_capture()).decode()
+
