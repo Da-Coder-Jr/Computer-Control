@@ -56,7 +56,9 @@ calls are executed automatically unless `--dry-run` is used.
 
 Add `--dry-run` to print actions instead of executing them. Pollinations will
 respond with JSON tool calls which are executed sequentially. Each iteration
-captures a fresh screenshot so the AI can correct itself.
+captures a fresh screenshot so the AI can correct itself. If a GUI isn't
+available (for example, on a headless server), the script falls back to a blank
+image in dry‑run mode.
 
 **Warning:** Allowing a remote AI to issue commands on your machine can be
 hazardous. Review output carefully or use the `--dry-run` option when testing.

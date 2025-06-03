@@ -2,13 +2,14 @@ import os
 import sys
 import json
 import shutil
-from typing import Dict, List
+from typing import Dict, List, Any
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import pytest
 
 import pollinations_client as client
+import controller
 
 
 def test_functions_spec_matches_action_map():
@@ -111,3 +112,22 @@ def test_query_pollinations_payload(monkeypatch):
     assert captured["json"]["model"] == "openai"
     assert captured["json"]["messages"] == messages
     assert captured["json"]["tools"] == client.FUNCTIONS_SPEC
+
+
+def test_main_uses_blank_image(monkeypatch):
+    import computer_control
+
+    def fake_capture():
+        raise controller.GUIUnavailable("no gui")
+
+    def fake_query(messages: List[Dict[str, Any]]):
+        nonlocal payload
+        payload = messages[1]["content"][1]["image_url"]["url"]
+        return {"choices": [{}]}
+
+    payload = ""
+    monkeypatch.setattr(controller, "capture_screen", fake_capture)
+    monkeypatch.setattr(client, "execute_tool_calls", lambda *_, **__: None)
+    monkeypatch.setattr(client, "query_pollinations", fake_query)
+    computer_control.main("hello", steps=1, dry_run=True)
+    assert payload.startswith("data:image/png;base64,")

@@ -3,9 +3,19 @@ from __future__ import annotations
 
 import argparse
 from typing import List, Dict, Any
+import base64
+import io
+from PIL import Image
 
 import controller
 import pollinations_client as client
+
+
+def blank_image() -> str:
+    """Return a tiny base64 PNG used when screenshots fail."""
+    buf = io.BytesIO()
+    Image.new("RGB", (1, 1), color="white").save(buf, format="PNG")
+    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
 def main(goal: str, steps: int = 5, dry_run: bool = False) -> None:
@@ -13,7 +23,14 @@ def main(goal: str, steps: int = 5, dry_run: bool = False) -> None:
     messages: List[Dict[str, Any]] = [
         {"role": "system", "content": client.SYSTEM_PROMPT}
     ]
-    screenshot = controller.capture_screen()
+    try:
+        screenshot = controller.capture_screen()
+    except controller.GUIUnavailable as exc:
+        if dry_run:
+            print(f"Warning: {exc}; using blank screenshot")
+            screenshot = blank_image()
+        else:
+            raise
     messages.append(
         {
             "role": "user",
@@ -40,7 +57,14 @@ def main(goal: str, steps: int = 5, dry_run: bool = False) -> None:
                 **({"tool_calls": tool_calls} if tool_calls else {}),
             }
         )
-        screenshot = controller.capture_screen()
+        try:
+            screenshot = controller.capture_screen()
+        except controller.GUIUnavailable as exc:
+            if dry_run:
+                print(f"Warning: {exc}; using blank screenshot")
+                screenshot = blank_image()
+            else:
+                raise
         messages.append(
             {
                 "role": "user",
