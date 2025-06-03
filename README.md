@@ -60,6 +60,15 @@ captures a fresh screenshot so the AI can correct itself. If a GUI isn't
 available (for example, on a headless server), the script falls back to a blank
 image in dry‑run mode.
 
+## Testing
+
+Run the automated test suite after installing the requirements:
+
+```bash
+pytest -q
+```
+
+
 **Warning:** Allowing a remote AI to issue commands on your machine can be
 hazardous. Review output carefully or use the `--dry-run` option when testing.
 This example is provided on a best-effort basis and may require tweaking for
