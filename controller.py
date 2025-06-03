@@ -6,6 +6,7 @@ import io
 import os
 import subprocess
 import sys
+import shutil
 
 
 try:
@@ -56,6 +57,8 @@ def open_app(name: str) -> None:
         elif sys.platform == "darwin":
             subprocess.run(["open", "-a", name], check=True)
         else:
+            if not shutil.which(name):  # ensure the app exists
+                raise FileNotFoundError(name)
             subprocess.Popen([name])
     except Exception as exc:  # pragma: no cover - platform dependent
         raise RuntimeError(f"Failed to open application '{name}': {exc}") from exc

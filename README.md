@@ -19,6 +19,22 @@ available.
 - Install them with `pip install -r requirements.txt`
 - Linux users may also need the `scrot` package for screenshots
 
+## Quick Start
+
+1. Install the requirements:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. Run a simple goal with three interaction steps:
+
+   ```bash
+   python computer_control.py "open calculator" --steps 3
+   ```
+
+3. Use `--dry-run` to print planned actions without executing them.
+
 ## Usage
 
 Set the `POLLINATIONS_API` environment variable to override the default endpoint
