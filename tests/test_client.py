@@ -1,7 +1,11 @@
-import os, sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+import os
+import sys
 import json
 from typing import Dict, List
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+import pytest
 
 import pollinations_client as client
 
@@ -31,5 +35,15 @@ def test_execute_tool_calls_dry_run(capsys):
     captured = capsys.readouterr()
     assert "[DRY-RUN] run_shell" in captured.out
     assert "[DRY-RUN] open_app" in captured.out
+
+
+def test_open_app_failure(monkeypatch):
+    def fake_startfile(_):
+        raise FileNotFoundError("missing")
+
+    monkeypatch.setattr("os.startfile", fake_startfile, raising=False)
+    with pytest.raises(RuntimeError):
+        import controller
+        controller.open_app("missing_app")
 
 
