@@ -114,6 +114,16 @@ def test_query_pollinations_payload(monkeypatch):
     assert captured["json"]["tools"] == client.FUNCTIONS_SPEC
 
 
+def test_query_pollinations_network_error(monkeypatch):
+    def fake_post(*_, **__):
+        raise client.requests.RequestException("boom")
+
+    monkeypatch.setattr(client.requests, "post", fake_post)
+    messages = [{"role": "user", "content": "hi"}]
+    with pytest.raises(RuntimeError):
+        client.query_pollinations(messages)
+
+
 def test_main_uses_blank_image(monkeypatch):
     import computer_control
 
@@ -131,3 +141,9 @@ def test_main_uses_blank_image(monkeypatch):
     monkeypatch.setattr(client, "query_pollinations", fake_query)
     computer_control.main("hello", steps=1, dry_run=True)
     assert payload.startswith("data:image/png;base64,")
+
+
+def test_create_file(tmp_path):
+    path = tmp_path / "sub" / "note.txt"
+    controller.create_file(str(path), "hello")
+    assert path.read_text() == "hello"

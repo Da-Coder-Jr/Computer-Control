@@ -17,7 +17,9 @@ available.
 - Python 3.8+
 - See `requirements.txt` for dependencies
 - Install them with `pip install -r requirements.txt`
-- Linux users may also need the `scrot` package for screenshots
+- Linux systems require the `scrot` package for screenshot functionality. Install
+  it with your package manager, for example:
+  `sudo apt-get install scrot` or `sudo yum install scrot`.
 
 ## Quick Start
 
