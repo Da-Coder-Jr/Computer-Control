@@ -1,3 +1,4 @@
+
 import os
 import sys
 import json
@@ -10,6 +11,12 @@ import pytest
 
 import pollinations_client as client
 import controller
+import os, sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+import json
+from typing import Dict, List
+
+import pollinations_client as client
 
 
 def test_functions_spec_matches_action_map():
@@ -37,6 +44,7 @@ def test_execute_tool_calls_dry_run(capsys):
     captured = capsys.readouterr()
     assert "[DRY-RUN] run_shell" in captured.out
     assert "[DRY-RUN] open_app" in captured.out
+
 
 
 def test_open_app_failure(monkeypatch):
@@ -147,3 +155,4 @@ def test_create_file(tmp_path):
     path = tmp_path / "sub" / "note.txt"
     controller.create_file(str(path), "hello")
     assert path.read_text() == "hello"
+

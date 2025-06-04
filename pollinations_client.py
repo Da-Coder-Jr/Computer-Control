@@ -134,6 +134,7 @@ def query_pollinations(messages: List[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
     headers = {"Referer": POLLINATIONS_REFERRER}
+
     try:
         response = requests.post(
             POLLINATIONS_API, json=payload, headers=headers, timeout=60
@@ -141,6 +142,10 @@ def query_pollinations(messages: List[Dict[str, Any]]) -> Dict[str, Any]:
         response.raise_for_status()
     except requests.RequestException as exc:  # network issues or HTTP errors
         raise RuntimeError("Failed to contact Pollinations API") from exc
+
+    response = requests.post(POLLINATIONS_API, json=payload, headers=headers, timeout=60)
+    response.raise_for_status()
+
     return response.json()
 
 

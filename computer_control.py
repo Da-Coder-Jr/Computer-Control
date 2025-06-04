@@ -3,12 +3,16 @@ from __future__ import annotations
 
 import argparse
 from typing import List, Dict, Any
+
 import base64
 import io
 from PIL import Image
 
+
+
 import controller
 import pollinations_client as client
+
 
 
 def blank_image() -> str:
@@ -18,11 +22,14 @@ def blank_image() -> str:
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
+
+
 def main(goal: str, steps: int = 5, dry_run: bool = False) -> None:
     """Send ``goal`` to Pollinations and execute returned actions."""
     messages: List[Dict[str, Any]] = [
         {"role": "system", "content": client.SYSTEM_PROMPT}
     ]
+
     try:
         screenshot = controller.capture_screen()
     except controller.GUIUnavailable as exc:
@@ -31,6 +38,9 @@ def main(goal: str, steps: int = 5, dry_run: bool = False) -> None:
             screenshot = blank_image()
         else:
             raise
+
+    screenshot = controller.capture_screen()
+
     messages.append(
         {
             "role": "user",
@@ -57,6 +67,7 @@ def main(goal: str, steps: int = 5, dry_run: bool = False) -> None:
                 **({"tool_calls": tool_calls} if tool_calls else {}),
             }
         )
+
         try:
             screenshot = controller.capture_screen()
         except controller.GUIUnavailable as exc:
@@ -65,6 +76,9 @@ def main(goal: str, steps: int = 5, dry_run: bool = False) -> None:
                 screenshot = blank_image()
             else:
                 raise
+
+        screenshot = controller.capture_screen()
+
         messages.append(
             {
                 "role": "user",
