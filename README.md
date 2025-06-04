@@ -37,7 +37,7 @@ available.
    ```
 
 3. Use `--dry-run` to print planned actions without executing them.
-=======
+
 - Linux users may also need the `scrot` package for screenshots
 
 
@@ -50,7 +50,7 @@ Set the `POLLINATIONS_API` environment variable to override the default endpoint
 
 Run the script from the repository root with a goal and the number of
 interaction loops:
-=======
+
 Run a goal with up to a number of interaction loops:
 
 
@@ -82,7 +82,7 @@ Run the automated test suite after installing the requirements:
 pytest -q
 ```
 
-=======
+
 captures a fresh screenshot so the AI can correct itself.
 
 
