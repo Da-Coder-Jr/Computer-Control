@@ -6,9 +6,7 @@ import io
 import os
 import subprocess
 import sys
-
 import shutil
-
 
 
 try:
@@ -54,6 +52,8 @@ def press_key(key: str) -> None:
 def open_app(name: str) -> None:
     """Open an application by name on the current platform."""
 
+    
+    
     try:
         if os.name == "nt":
             os.startfile(name)
@@ -66,14 +66,6 @@ def open_app(name: str) -> None:
     except Exception as exc:  # pragma: no cover - platform dependent
         raise RuntimeError(f"Failed to open application '{name}': {exc}") from exc
 
-    if os.name == "nt":
-        os.startfile(name)
-    elif sys.platform == "darwin":
-        subprocess.run(["open", "-a", name], check=True)
-    else:
-        subprocess.Popen([name])
-
-
 
 def create_file(path: str, content: str) -> None:
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
@@ -83,15 +75,13 @@ def create_file(path: str, content: str) -> None:
 
 def capture_screen() -> str:
     ensure_gui_available()
-
+    
     try:
         image = pyautogui.screenshot()
     except Exception as exc:  # pragma: no cover - GUI may be unavailable
         raise GUIUnavailable(f"Failed to capture screen: {exc}") from exc
 
-
-    image = pyautogui.screenshot()
-
+        
     buf = io.BytesIO()
     image.save(buf, format="PNG")
     data = base64.b64encode(buf.getvalue()).decode()

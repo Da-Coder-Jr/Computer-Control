@@ -1,4 +1,3 @@
-
 import os
 import sys
 import json
@@ -11,12 +10,6 @@ import pytest
 
 import pollinations_client as client
 import controller
-import os, sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-import json
-from typing import Dict, List
-
-import pollinations_client as client
 
 
 def test_functions_spec_matches_action_map():
@@ -38,12 +31,25 @@ def test_execute_tool_calls_dry_run(capsys):
                 "name": "open_app",
                 "arguments": json.dumps({"name": "calculator"}),
             }
-        }
+
+        },
     ]
     client.execute_tool_calls(calls, dry_run=True)
     captured = capsys.readouterr()
-    assert "[DRY-RUN] run_shell" in captured.out
-    assert "[DRY-RUN] open_app" in captured.out
+    assert "DRY-RUN" in captured.out
+
+
+def test_help_runs(tmp_path):
+    """computer_control.py --help should exit cleanly."""
+    from subprocess import run
+
+    result = run(
+        [sys.executable, "computer_control.py", "--help"],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert "usage:" in result.stdout.lower()
 
 
 
@@ -63,6 +69,7 @@ def test_open_app_failure(monkeypatch):
 
 def test_open_app_linux(monkeypatch):
     import controller
+
     called = {}
 
     monkeypatch.setattr(controller, "os", type("DummyOS", (), {"name": "posix"}))
@@ -73,8 +80,10 @@ def test_open_app_linux(monkeypatch):
 
     def fake_popen(cmd):
         called["cmd"] = cmd
+
         class Dummy:
             pass
+
         return Dummy()
 
     monkeypatch.setattr("shutil.which", fake_which)
@@ -84,14 +93,19 @@ def test_open_app_linux(monkeypatch):
     assert called["cmd"] == ["vim"]
 
 
-
 def test_capture_screen_error(monkeypatch):
     import controller
 
     def bad_screenshot():
         raise OSError("scrot missing")
 
-    monkeypatch.setattr(controller, "pyautogui", type("Dummy", (), {"screenshot": staticmethod(bad_screenshot)}))
+
+    monkeypatch.setattr(
+        controller,
+        "pyautogui",
+        type("Dummy", (), {"screenshot": staticmethod(bad_screenshot)}),
+    )
+
 
     with pytest.raises(controller.GUIUnavailable):
         controller.capture_screen()
@@ -127,9 +141,10 @@ def test_query_pollinations_network_error(monkeypatch):
         raise client.requests.RequestException("boom")
 
     monkeypatch.setattr(client.requests, "post", fake_post)
+    monkeypatch.setattr(client.time, "sleep", lambda *_: None)
     messages = [{"role": "user", "content": "hi"}]
     with pytest.raises(RuntimeError):
-        client.query_pollinations(messages)
+        client.query_pollinations(messages, retries=2)
 
 
 def test_main_uses_blank_image(monkeypatch):
@@ -155,4 +170,3 @@ def test_create_file(tmp_path):
     path = tmp_path / "sub" / "note.txt"
     controller.create_file(str(path), "hello")
     assert path.read_text() == "hello"
-

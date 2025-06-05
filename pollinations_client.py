@@ -1,15 +1,22 @@
 """Client utilities for interacting with the Pollinations API."""
-from __future__ import annotations
 
+from __future__ import annotations
 import json
 import os
-from typing import Any, Callable, Dict, List
+
+import time
+from typing import Any, Callable, Dict, List, Optional
+
 
 import requests
 
 import controller
 
-POLLINATIONS_API = os.environ.get("POLLINATIONS_API", "https://text.pollinations.ai/openai")
+
+POLLINATIONS_API = os.environ.get(
+    "POLLINATIONS_API", "https://text.pollinations.ai/openai"
+)
+
 POLLINATIONS_REFERRER = os.environ.get("POLLINATIONS_REFERRER", "https://example.com")
 
 SYSTEM_PROMPT = (
@@ -105,7 +112,12 @@ FUNCTIONS_SPEC: List[Dict[str, Any]] = [
             "description": "Create a file with the given content",
             "parameters": {
                 "type": "object",
-                "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+
+                "properties": {
+                    "path": {"type": "string"},
+                    "content": {"type": "string"},
+                },
+
                 "required": ["path", "content"],
             },
         },
@@ -123,7 +135,11 @@ ACTION_MAP: Dict[str, Callable[..., None]] = {
 }
 
 
-def query_pollinations(messages: List[Dict[str, Any]]) -> Dict[str, Any]:
+
+def query_pollinations(
+    messages: List[Dict[str, Any]], retries: int = 3
+) -> Dict[str, Any]:
+
     """Send ``messages`` to Pollinations and return the JSON response."""
 
     payload = {
@@ -135,22 +151,36 @@ def query_pollinations(messages: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     headers = {"Referer": POLLINATIONS_REFERRER}
 
-    try:
-        response = requests.post(
-            POLLINATIONS_API, json=payload, headers=headers, timeout=60
-        )
-        response.raise_for_status()
-    except requests.RequestException as exc:  # network issues or HTTP errors
-        raise RuntimeError("Failed to contact Pollinations API") from exc
+    delay = 1
+    for attempt in range(1, retries + 1):
+        try:
+            response = requests.post(
+                POLLINATIONS_API, json=payload, headers=headers, timeout=60
+            )
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as exc:  # network issues or HTTP errors
+            if attempt == retries:
+                raise RuntimeError("Failed to contact Pollinations API") from exc
+            time.sleep(delay)
+            delay *= 2
 
-    response = requests.post(POLLINATIONS_API, json=payload, headers=headers, timeout=60)
-    response.raise_for_status()
-
-    return response.json()
+    # should never reach here
+    raise RuntimeError("Failed to contact Pollinations API")
 
 
-def execute_tool_calls(tool_calls: List[Dict[str, Any]], dry_run: bool = False) -> None:
+from rich.console import Console
+from rich.panel import Panel
+
+
+def execute_tool_calls(
+    tool_calls: List[Dict[str, Any]],
+    dry_run: bool = False,
+    console: Optional[Console] = None,
+) -> None:
     """Run the tool calls returned by the model."""
+    console = console or Console()
+
     for call in tool_calls:
         name = call.get("function", {}).get("name")
         if not name:
@@ -162,13 +192,14 @@ def execute_tool_calls(tool_calls: List[Dict[str, Any]], dry_run: bool = False) 
         try:
             params = json.loads(args) if args else {}
         except json.JSONDecodeError:
-            print(f"Invalid arguments for {name}: {args}")
+
+            console.print(f"[red]Invalid arguments for {name}: {args}[/red]")
             continue
         if dry_run:
-            print(f"[DRY-RUN] {name}({params})")
+            console.print(f"[yellow][DRY-RUN][/yellow] {name}({params})")
             continue
         try:
             func(**params)
         except Exception as exc:  # pylint: disable=broad-except
-            print(f"Error executing {name}: {exc}")
 
+            console.print(Panel(str(exc), title=f"Error executing {name}", style="red"))
