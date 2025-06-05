@@ -1,7 +1,6 @@
 """Run a goal through Pollinations AI to control the computer."""
 
 from __future__ import annotations
-
 import argparse
 import time
 from typing import List, Dict, Any, Optional
@@ -13,7 +12,6 @@ from rich.progress import Progress, BarColumn, TextColumn
 from rich.table import Table
 from rich.panel import Panel
 from rich_argparse import RichHelpFormatter
-
 import controller
 import pollinations_client as client
 
@@ -33,14 +31,17 @@ def main(
     messages: List[Dict[str, Any]] = [
         {"role": "system", "content": client.SYSTEM_PROMPT}
     ]
+
     try:
         screenshot = controller.capture_screen()
     except controller.GUIUnavailable as exc:
         if dry_run:
+
             console.print(f"[yellow]Warning: {exc}; using blank screenshot[/yellow]")
             screenshot = blank_image()
         else:
             raise
+
     messages.append(
         {
             "role": "user",
@@ -50,6 +51,7 @@ def main(
             ],
         }
     )
+
 
     loop_limit = steps if steps is not None else max_steps
 

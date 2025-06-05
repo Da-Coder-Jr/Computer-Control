@@ -1,19 +1,22 @@
 """Client utilities for interacting with the Pollinations API."""
 
 from __future__ import annotations
-
 import json
 import os
+
 import time
 from typing import Any, Callable, Dict, List, Optional
+
 
 import requests
 
 import controller
 
+
 POLLINATIONS_API = os.environ.get(
     "POLLINATIONS_API", "https://text.pollinations.ai/openai"
 )
+
 POLLINATIONS_REFERRER = os.environ.get("POLLINATIONS_REFERRER", "https://example.com")
 
 SYSTEM_PROMPT = (
@@ -109,10 +112,12 @@ FUNCTIONS_SPEC: List[Dict[str, Any]] = [
             "description": "Create a file with the given content",
             "parameters": {
                 "type": "object",
+
                 "properties": {
                     "path": {"type": "string"},
                     "content": {"type": "string"},
                 },
+
                 "required": ["path", "content"],
             },
         },
@@ -130,9 +135,11 @@ ACTION_MAP: Dict[str, Callable[..., None]] = {
 }
 
 
+
 def query_pollinations(
     messages: List[Dict[str, Any]], retries: int = 3
 ) -> Dict[str, Any]:
+
     """Send ``messages`` to Pollinations and return the JSON response."""
 
     payload = {
@@ -143,6 +150,7 @@ def query_pollinations(
     }
 
     headers = {"Referer": POLLINATIONS_REFERRER}
+
     delay = 1
     for attempt in range(1, retries + 1):
         try:
@@ -172,6 +180,7 @@ def execute_tool_calls(
 ) -> None:
     """Run the tool calls returned by the model."""
     console = console or Console()
+
     for call in tool_calls:
         name = call.get("function", {}).get("name")
         if not name:
@@ -183,6 +192,7 @@ def execute_tool_calls(
         try:
             params = json.loads(args) if args else {}
         except json.JSONDecodeError:
+
             console.print(f"[red]Invalid arguments for {name}: {args}[/red]")
             continue
         if dry_run:
@@ -191,4 +201,5 @@ def execute_tool_calls(
         try:
             func(**params)
         except Exception as exc:  # pylint: disable=broad-except
+
             console.print(Panel(str(exc), title=f"Error executing {name}", style="red"))

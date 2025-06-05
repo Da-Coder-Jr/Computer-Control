@@ -31,6 +31,7 @@ def test_execute_tool_calls_dry_run(capsys):
                 "name": "open_app",
                 "arguments": json.dumps({"name": "calculator"}),
             }
+
         },
     ]
     client.execute_tool_calls(calls, dry_run=True)
@@ -51,6 +52,7 @@ def test_help_runs(tmp_path):
     assert "usage:" in result.stdout.lower()
 
 
+
 def test_open_app_failure(monkeypatch):
     def fake_startfile(_):
         raise FileNotFoundError("missing")
@@ -62,7 +64,6 @@ def test_open_app_failure(monkeypatch):
     monkeypatch.setattr("shutil.which", fake_which)
     with pytest.raises(RuntimeError):
         import controller
-
         controller.open_app("missing_app")
 
 
@@ -98,11 +99,13 @@ def test_capture_screen_error(monkeypatch):
     def bad_screenshot():
         raise OSError("scrot missing")
 
+
     monkeypatch.setattr(
         controller,
         "pyautogui",
         type("Dummy", (), {"screenshot": staticmethod(bad_screenshot)}),
     )
+
 
     with pytest.raises(controller.GUIUnavailable):
         controller.capture_screen()

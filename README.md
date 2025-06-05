@@ -29,6 +29,7 @@ available.
    pip install -r requirements.txt
    ```
 
+
 2. Run a goal in automatic mode (the script keeps looping until the AI
    signals it is done or reaches 15 steps):
 
@@ -44,7 +45,7 @@ available.
    ```bash
    pytest -q
    ```
-
+   
 ## Usage
 
 Set the `POLLINATIONS_API` environment variable to override the default endpoint
@@ -64,6 +65,8 @@ maximum of 15 steps by default). Use `--max-steps` to override that limit or
 `computer_control.py` lives in the project root, so reference it directly
 or with the full path if running from another directory.
 
+
+
 The AI may request functions like `open_app` to launch applications. These tool
 calls are executed automatically unless `--dry-run` is used.
 
@@ -72,6 +75,7 @@ respond with JSON tool calls which are executed sequentially. Each iteration
 captures a fresh screenshot so the AI can correct itself. If a GUI isn't
 available (for example, on a headless server), the script falls back to a blank
 image in dry‑run mode.
+
 
 
 The Rich-powered interface displays a progress bar and shows each tool call in
@@ -85,11 +89,11 @@ Run the automated test suite after installing the requirements:
 pytest -q
 ```
 
-
 **Warning:** Allowing a remote AI to issue commands on your machine can be
 hazardous. Review output carefully or use the `--dry-run` option when testing.
 This example is provided on a best-effort basis and may require tweaking for
 your specific setup.
+
 
 This project is released under the terms of the MIT License; see
 the `LICENSE` file for details.

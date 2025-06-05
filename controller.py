@@ -1,5 +1,4 @@
 """Platform-independent actions executed on behalf of the AI."""
-
 from __future__ import annotations
 
 import base64
@@ -52,6 +51,9 @@ def press_key(key: str) -> None:
 
 def open_app(name: str) -> None:
     """Open an application by name on the current platform."""
+
+    
+    
     try:
         if os.name == "nt":
             os.startfile(name)
@@ -73,11 +75,13 @@ def create_file(path: str, content: str) -> None:
 
 def capture_screen() -> str:
     ensure_gui_available()
+    
     try:
         image = pyautogui.screenshot()
     except Exception as exc:  # pragma: no cover - GUI may be unavailable
         raise GUIUnavailable(f"Failed to capture screen: {exc}") from exc
 
+        
     buf = io.BytesIO()
     image.save(buf, format="PNG")
     data = base64.b64encode(buf.getvalue()).decode()
