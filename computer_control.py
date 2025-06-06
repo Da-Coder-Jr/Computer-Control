@@ -112,6 +112,8 @@ def main(
             if data.get("done") or message.get("done"):
                 break
 
+        console.print(Panel("Goal complete", style="green", title="Done"))
+
 
 class Formatter(RichHelpFormatter):
     """Rich help formatter with defaults shown."""
