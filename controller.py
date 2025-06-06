@@ -50,6 +50,12 @@ def press_key(key: str) -> None:
     pyautogui.press(key)
 
 
+def scroll(amount: int) -> None:
+    """Scroll the mouse wheel by the given amount."""
+    ensure_gui_available()
+    pyautogui.scroll(amount)
+
+
 def open_app(name: str) -> None:
     """Open an application by name on the current platform."""
     try:

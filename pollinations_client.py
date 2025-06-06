@@ -93,6 +93,18 @@ FUNCTIONS_SPEC: List[Dict[str, Any]] = [
     {
         "type": "function",
         "function": {
+            "name": "scroll",
+            "description": "Scroll the mouse wheel",
+            "parameters": {
+                "type": "object",
+                "properties": {"amount": {"type": "integer"}},
+                "required": ["amount"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "open_app",
             "description": "Open an application by name",
             "parameters": {
@@ -125,6 +137,7 @@ ACTION_MAP: Dict[str, Callable[..., None]] = {
     "click": controller.click,
     "write_text": controller.write_text,
     "press_key": controller.press_key,
+    "scroll": controller.scroll,
     "open_app": controller.open_app,
     "create_file": controller.create_file,
 }

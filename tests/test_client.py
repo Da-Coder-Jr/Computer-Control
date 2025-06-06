@@ -32,6 +32,12 @@ def test_execute_tool_calls_dry_run(capsys):
                 "arguments": json.dumps({"name": "calculator"}),
             }
         },
+        {
+            "function": {
+                "name": "scroll",
+                "arguments": json.dumps({"amount": 100}),
+            }
+        },
     ]
     client.execute_tool_calls(calls, dry_run=True, secure=False)
     captured = capsys.readouterr()

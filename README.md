@@ -74,6 +74,9 @@ captures a fresh screenshot so the AI can correct itself. If a GUI isn't
 available (for example, on a headless server), the script falls back to a blank
 image in dry‑run mode.
 
+Supported actions include launching apps, running shell commands, moving and
+clicking the mouse, scrolling, typing text, pressing keys, and creating files.
+
 
 The Rich-powered interface displays a progress bar and shows each tool call in
 a highlighted panel.
