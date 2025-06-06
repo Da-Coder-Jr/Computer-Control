@@ -107,7 +107,8 @@ def main(
             status.add_row("Loop", str(i + 1))
             status.add_row("Elapsed", f"{time.perf_counter() - start_time:.1f}s")
             status.add_row("Mode", "dry-run" if dry_run else "live")
-            console.print(status)
+            console.print(Panel(status, title="Status", style="magenta"))
+            console.rule()
             if data.get("done") or message.get("done"):
                 break
 
