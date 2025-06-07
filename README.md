@@ -78,8 +78,8 @@ Supported actions include launching apps, running shell commands, moving and
 clicking the mouse, scrolling, typing text, pressing keys, and creating files.
 
 
-The Rich-powered interface displays a progress bar and shows each tool call in
-a highlighted panel.
+During execution a small popup window displays a progress bar and the current
+action. If a GUI is unavailable the script falls back to simple console output.
 
 ## Testing
 

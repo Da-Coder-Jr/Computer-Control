@@ -153,6 +153,7 @@ def query_pollinations(
         "messages": messages,
         "tools": FUNCTIONS_SPEC,
         "tool_choice": "auto",
+        "temperature": 0.2,
     }
 
     headers = {"Referer": POLLINATIONS_REFERRER}
@@ -160,7 +161,7 @@ def query_pollinations(
     for attempt in range(1, retries + 1):
         try:
             response = requests.post(
-                POLLINATIONS_API, json=payload, headers=headers, timeout=60
+                POLLINATIONS_API, json=payload, headers=headers, timeout=30
             )
         except requests.RequestException as exc:  # network issues
             if attempt == retries:
@@ -184,19 +185,15 @@ def query_pollinations(
     raise RuntimeError("Failed to contact Pollinations API")
 
 
-from rich.console import Console
-from rich.panel import Panel
-from rich.prompt import Confirm
 
 
 def execute_tool_calls(
     tool_calls: List[Dict[str, Any]],
     dry_run: bool = False,
     secure: bool = False,
-    console: Optional[Console] = None,
+    console: Optional[Any] = None,
 ) -> None:
     """Run the tool calls returned by the model."""
-    console = console or Console()
     for call in tool_calls:
         name = call.get("function", {}).get("name")
         if not name:
@@ -208,18 +205,19 @@ def execute_tool_calls(
         try:
             params = json.loads(args) if args else {}
         except json.JSONDecodeError:
-            console.print(f"[red]Invalid arguments for {name}: {args}[/red]")
+            print(f"Invalid arguments for {name}: {args}")
             continue
-        console.print(Panel(f"{name}({params})", title="Tool Call", style="cyan"))
+        print(f"{name}({params})")
         if secure:
-            if not Confirm.ask(f"Execute {name}?", default=False):
-                console.print(f"[yellow]Skipped {name}[/yellow]")
+            resp = input(f"Execute {name}? [y/N] ")
+            if resp.lower() not in ("y", "yes"):
+                print(f"Skipped {name}")
                 continue
         if dry_run:
-            console.print(f"[yellow][DRY-RUN][/yellow] {name}({params})")
+            print(f"[DRY-RUN] {name}({params})")
             continue
         try:
             func(**params)
-            console.print(f"[green]Executed {name}[/green]")
+            print(f"Executed {name}")
         except Exception as exc:  # pylint: disable=broad-except
-            console.print(Panel(str(exc), title=f"Error executing {name}", style="red"))
+            print(f"Error executing {name}: {exc}")

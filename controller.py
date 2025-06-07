@@ -83,8 +83,15 @@ def capture_screen() -> str:
         image = pyautogui.screenshot()
     except Exception as exc:  # pragma: no cover - GUI may be unavailable
         raise GUIUnavailable(f"Failed to capture screen: {exc}") from exc
-
+    try:
+        max_dim = max(image.size)
+        if max_dim > 800:
+            ratio = 800 / max_dim
+            new_size = (int(image.width * ratio), int(image.height * ratio))
+            image = image.resize(new_size)
+    except Exception:
+        pass
     buf = io.BytesIO()
-    image.save(buf, format="PNG")
+    image.save(buf, format="PNG", optimize=True)
     data = base64.b64encode(buf.getvalue()).decode()
     return f"data:image/png;base64,{data}"

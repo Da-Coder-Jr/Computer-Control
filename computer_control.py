@@ -8,14 +8,54 @@ from typing import List, Dict, Any, Optional
 import base64
 import io
 from PIL import Image
-from rich.console import Console
-from rich.progress import Progress, BarColumn, TextColumn
-from rich.table import Table
-from rich.panel import Panel
-from rich_argparse import RichHelpFormatter
+import tkinter as tk
+from tkinter import ttk, messagebox
 
 import controller
 import pollinations_client as client
+
+
+class PopupUI:
+    """Simple Tkinter-based progress popup."""
+
+    def __init__(self, max_steps: int) -> None:
+        self.max_steps = max_steps
+        try:
+            self.root = tk.Tk()
+            self.root.title("Computer Control")
+            self.progress = ttk.Progressbar(
+                self.root, maximum=max_steps, length=300
+            )
+            self.progress.pack(padx=10, pady=10)
+            self.label = ttk.Label(self.root, text="Starting...")
+            self.label.pack(padx=10, pady=10)
+            self.update = self._update_gui
+            self.done = self._done_gui
+            self.root.update()
+        except Exception:
+            self.root = None
+            self.update = self._update_console
+            self.done = self._done_console
+            print("GUI unavailable; falling back to console output")
+
+    def _update_gui(self, step: int, text: str) -> None:
+        self.progress["value"] = step
+        self.label.config(text=text)
+        self.root.update()
+
+    def _done_gui(self) -> None:
+        self.label.config(text="Done")
+        self.root.update()
+        try:
+            messagebox.showinfo("Done", "Goal complete")
+        finally:
+            self.root.destroy()
+
+    def _update_console(self, step: int, text: str) -> None:
+        print(f"Step {step}/{self.max_steps}: {text}")
+
+    def _done_console(self) -> None:
+        print("Goal complete")
 
 
 def blank_image() -> str:
@@ -33,7 +73,7 @@ def main(
     secure: bool = False,
 ) -> None:
     """Send ``goal`` to Pollinations and execute returned actions."""
-    console = Console()
+    ui = PopupUI(max_steps if steps is None else steps)
     messages: List[Dict[str, Any]] = [
         {"role": "system", "content": client.SYSTEM_PROMPT}
     ]
@@ -41,7 +81,7 @@ def main(
         screenshot = controller.capture_screen()
     except controller.GUIUnavailable as exc:
         if dry_run:
-            console.print(f"[yellow]Warning: {exc}; using blank screenshot[/yellow]")
+            print(f"Warning: {exc}; using blank screenshot")
             screenshot = blank_image()
         else:
             raise
@@ -57,83 +97,52 @@ def main(
 
     loop_limit = steps if steps is not None else max_steps
 
-    with Progress(
-        TextColumn("Step {task.completed}/{task.total}"),
-        BarColumn(),
-        console=console,
-    ) as progress:
-        task = progress.add_task("ai", total=loop_limit)
-        start_time = time.perf_counter()
+    start_time = time.perf_counter()
 
-        for i in range(loop_limit):
-            progress.update(task, advance=1)
-            data = client.query_pollinations(messages)
-            choice = data.get("choices", [{}])[0]
-            message = choice.get("message", {})
-            tool_calls = message.get("tool_calls")
-            if tool_calls:
-                client.execute_tool_calls(
-                    tool_calls, dry_run=dry_run, secure=secure, console=console
-                )
-            if content := message.get("content"):
-                console.print(content)
-            messages.append(
-                {
-                    "role": "assistant",
-                    "content": message.get("content", ""),
-                    **({"tool_calls": tool_calls} if tool_calls else {}),
-                }
-            )
-            try:
-                screenshot = controller.capture_screen()
-            except controller.GUIUnavailable as exc:
-                if dry_run:
-                    console.print(
-                        f"[yellow]Warning: {exc}; using blank screenshot[/yellow]"
-                    )
-                    screenshot = blank_image()
-                else:
-                    raise
-            messages.append(
-                {
-                    "role": "user",
+    for i in range(loop_limit):
+        data = client.query_pollinations(messages)
+        choice = data.get("choices", [{}])[0]
+        message = choice.get("message", {})
+        tool_calls = message.get("tool_calls")
+        if tool_calls:
+            client.execute_tool_calls(tool_calls, dry_run=dry_run, secure=secure)
+            ui.update(i + 1, f"{tool_calls[0].get('function',{}).get('name')}")
+        if content := message.get("content"):
+            print(content)
+        messages.append(
+            {
+                "role": "assistant",
+                "content": message.get("content", ""),
+                **({"tool_calls": tool_calls} if tool_calls else {}),
+            }
+        )
+        try:
+            screenshot = controller.capture_screen()
+        except controller.GUIUnavailable as exc:
+            if dry_run:
+                print(f"Warning: {exc}; using blank screenshot")
+                screenshot = blank_image()
+            else:
+                raise
+        messages.append(
+            {
+                "role": "user",
                     "content": [
                         {"type": "text", "text": "Updated screen"},
                         {"type": "image_url", "image_url": {"url": screenshot}},
                     ],
                 }
             )
-            status = Table(box=None)
-            status.add_row("Loop", str(i + 1))
-            status.add_row("Elapsed", f"{time.perf_counter() - start_time:.1f}s")
-            status.add_row("Mode", "dry-run" if dry_run else "live")
-            console.print(Panel(status, title="Status", style="magenta"))
-            console.rule()
-            if data.get("done") or message.get("done"):
-                break
-
-        console.print(Panel("Goal complete", style="green", title="Done"))
-
-
-class Formatter(RichHelpFormatter):
-    """Rich help formatter with defaults shown."""
-
-    def __init__(
-        self, *args: Any, **kwargs: Any
-    ) -> None:  # pragma: no cover - simple wrapper
-        super().__init__(*args, **kwargs)
-
-    def _get_help_string(
-        self, action: argparse.Action
-    ) -> str:  # pragma: no cover - delegate
-        return argparse.ArgumentDefaultsHelpFormatter._get_help_string(self, action)
+        ui.update(i + 1, f"step {i + 1}")
+        if data.get("done") or message.get("done"):
+            break
+    ui.done()
 
 
 if __name__ == "__main__":
-    formatter = Formatter
     parser = argparse.ArgumentParser(
         description="Control the computer with Pollinations AI",
-        formatter_class=formatter,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         epilog="Example: python computer_control.py 'Open docs.new and write a poem praising Codex.'",
     )
     parser.add_argument("goal", help="Goal to send to the AI")

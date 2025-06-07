@@ -53,11 +53,7 @@ def test_execute_tool_calls_secure(monkeypatch, capsys):
             }
         }
     ]
-    monkeypatch.setattr(
-        client,
-        "Confirm",
-        type("Dummy", (), {"ask": staticmethod(lambda *_, **__: False)}),
-    )
+    monkeypatch.setattr("builtins.input", lambda *_: "n")
     client.execute_tool_calls(calls, dry_run=False, secure=True)
     captured = capsys.readouterr()
     assert "Skipped run_shell" in captured.out
