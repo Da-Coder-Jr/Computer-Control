@@ -105,6 +105,32 @@ FUNCTIONS_SPEC: List[Dict[str, Any]] = [
     {
         "type": "function",
         "function": {
+            "name": "draw_path",
+            "description": "Drag the mouse along a list of coordinates",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "points": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "x": {"type": "integer"},
+                                "y": {"type": "integer"},
+                            },
+                            "required": ["x", "y"],
+                        },
+                        "minItems": 2,
+                    },
+                    "duration": {"type": "number", "default": 0.0},
+                },
+                "required": ["points"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "open_app",
             "description": "Open an application by name",
             "parameters": {
@@ -138,6 +164,7 @@ ACTION_MAP: Dict[str, Callable[..., None]] = {
     "write_text": controller.write_text,
     "press_key": controller.press_key,
     "scroll": controller.scroll,
+    "draw_path": controller.draw_path,
     "open_app": controller.open_app,
     "create_file": controller.create_file,
 }
@@ -183,8 +210,6 @@ def query_pollinations(
 
     # should never reach here
     raise RuntimeError("Failed to contact Pollinations API")
-
-
 
 
 def execute_tool_calls(

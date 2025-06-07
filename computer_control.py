@@ -23,9 +23,7 @@ class PopupUI:
         try:
             self.root = tk.Tk()
             self.root.title("Computer Control")
-            self.progress = ttk.Progressbar(
-                self.root, maximum=max_steps, length=300
-            )
+            self.progress = ttk.Progressbar(self.root, maximum=max_steps, length=300)
             self.progress.pack(padx=10, pady=10)
             self.label = ttk.Label(self.root, text="Starting...")
             self.label.pack(padx=10, pady=10)
@@ -127,12 +125,12 @@ def main(
         messages.append(
             {
                 "role": "user",
-                    "content": [
-                        {"type": "text", "text": "Updated screen"},
-                        {"type": "image_url", "image_url": {"url": screenshot}},
-                    ],
-                }
-            )
+                "content": [
+                    {"type": "text", "text": "Updated screen"},
+                    {"type": "image_url", "image_url": {"url": screenshot}},
+                ],
+            }
+        )
         ui.update(i + 1, f"step {i + 1}")
         if data.get("done") or message.get("done"):
             break

@@ -38,6 +38,14 @@ def test_execute_tool_calls_dry_run(capsys):
                 "arguments": json.dumps({"amount": 100}),
             }
         },
+        {
+            "function": {
+                "name": "draw_path",
+                "arguments": json.dumps(
+                    {"points": [{"x": 0, "y": 0}, {"x": 1, "y": 1}]}
+                ),
+            },
+        },
     ]
     client.execute_tool_calls(calls, dry_run=True, secure=False)
     captured = capsys.readouterr()

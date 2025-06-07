@@ -8,6 +8,7 @@ import os
 import subprocess
 import sys
 import shutil
+from typing import List, Dict
 
 
 try:
@@ -54,6 +55,19 @@ def scroll(amount: int) -> None:
     """Scroll the mouse wheel by the given amount."""
     ensure_gui_available()
     pyautogui.scroll(amount)
+
+
+def draw_path(points: List[Dict[str, int]], duration: float = 0.0) -> None:
+    """Draw by dragging the mouse through a list of x,y coordinates."""
+    ensure_gui_available()
+    if not points:
+        return
+    start = points[0]
+    pyautogui.moveTo(start["x"], start["y"])
+    pyautogui.mouseDown()
+    for pt in points[1:]:
+        pyautogui.dragTo(pt["x"], pt["y"], duration=duration, button="left")
+    pyautogui.mouseUp()
 
 
 def open_app(name: str) -> None:
