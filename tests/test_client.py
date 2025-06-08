@@ -4,9 +4,11 @@ import json
 import shutil
 from typing import Dict, List, Any
 
+
 sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 )
+
 
 import pytest
 
@@ -33,6 +35,7 @@ def test_execute_tool_calls_dry_run(capsys):
                 "name": "open_app",
                 "arguments": json.dumps({"name": "calculator"}),
             }
+
         },
         {
             "function": {
@@ -76,8 +79,10 @@ def test_execute_tool_calls_dry_run(capsys):
         },
     ]
     client.execute_tool_calls(calls, dry_run=True, secure=False)
+
     captured = capsys.readouterr()
     assert "DRY-RUN" in captured.out
+
 
 
 def test_execute_tool_calls_secure(monkeypatch, capsys):
@@ -95,6 +100,7 @@ def test_execute_tool_calls_secure(monkeypatch, capsys):
     assert "Skipped run_shell" in captured.out
 
 
+
 def test_help_runs(tmp_path):
     """computer_control.py --help should exit cleanly."""
     from subprocess import run
@@ -108,6 +114,7 @@ def test_help_runs(tmp_path):
     assert "usage:" in result.stdout.lower()
 
 
+
 def test_open_app_failure(monkeypatch):
     def fake_startfile(_):
         raise FileNotFoundError("missing")
@@ -119,7 +126,6 @@ def test_open_app_failure(monkeypatch):
     monkeypatch.setattr("shutil.which", fake_which)
     with pytest.raises(RuntimeError):
         import controller
-
         controller.open_app("missing_app")
 
 
@@ -128,9 +134,11 @@ def test_open_app_linux(monkeypatch):
 
     called = {}
 
+
     monkeypatch.setattr(
         controller, "os", type("DummyOS", (), {"name": "posix"})
     )
+
 
     def fake_which(name):
         called["which"] = name
@@ -157,11 +165,13 @@ def test_capture_screen_error(monkeypatch):
     def bad_screenshot():
         raise OSError("scrot missing")
 
+
     monkeypatch.setattr(
         controller,
         "pyautogui",
         type("Dummy", (), {"screenshot": staticmethod(bad_screenshot)}),
     )
+
 
     with pytest.raises(controller.GUIUnavailable):
         controller.capture_screen()
@@ -175,7 +185,9 @@ def test_query_pollinations_payload(monkeypatch):
         captured["json"] = json
 
         class Response:
+
             ok = True
+
 
             def raise_for_status(self):
                 pass
@@ -205,6 +217,7 @@ def test_query_pollinations_network_error(monkeypatch):
         client.query_pollinations(messages, retries=2)
 
 
+
 def test_query_pollinations_http_error(monkeypatch):
     class Resp:
         status_code = 400
@@ -223,6 +236,7 @@ def test_query_pollinations_http_error(monkeypatch):
         client.query_pollinations(
             [{"role": "user", "content": "hi"}], retries=2
         )
+
 
 
 def test_main_uses_blank_image(monkeypatch):
@@ -250,6 +264,7 @@ def test_create_file(tmp_path):
     assert path.read_text() == "hello"
 
 
+
 def test_copy_and_delete_file(tmp_path):
     src = tmp_path / "a.txt"
     dst = tmp_path / "b.txt"
@@ -273,3 +288,4 @@ def test_analysis_functions():
     summary = client.ACTION_MAP["summarize_codebase"]()
     assert "computer_control.py" in summary
     assert "main" in summary["computer_control.py"]["functions"]
+

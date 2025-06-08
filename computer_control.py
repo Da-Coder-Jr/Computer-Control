@@ -1,7 +1,6 @@
 """Run a goal through Pollinations AI to control the computer."""
 
 from __future__ import annotations
-
 import argparse
 import time
 from typing import List, Dict, Any, Optional
@@ -10,9 +9,9 @@ import io
 from PIL import Image
 import tkinter as tk
 from tkinter import ttk, messagebox
-
 import controller
 import pollinations_client as client
+
 
 
 class PopupUI:
@@ -58,6 +57,7 @@ class PopupUI:
         print("Goal complete")
 
 
+
 def blank_image() -> str:
     """Return a tiny base64 PNG used when screenshots fail."""
     buf = io.BytesIO()
@@ -66,6 +66,7 @@ def blank_image() -> str:
 
 
 def main(
+  
     goal: str,
     steps: Optional[int] = None,
     max_steps: int = 15,
@@ -77,14 +78,17 @@ def main(
     messages: List[Dict[str, Any]] = [
         {"role": "system", "content": client.SYSTEM_PROMPT}
     ]
+
     try:
         screenshot = controller.capture_screen()
     except controller.GUIUnavailable as exc:
         if dry_run:
+
             print(f"Warning: {exc}; using blank screenshot")
             screenshot = blank_image()
         else:
             raise
+
     messages.append(
         {
             "role": "user",
@@ -94,6 +98,7 @@ def main(
             ],
         }
     )
+
 
     loop_limit = steps if steps is not None else max_steps
 
@@ -145,6 +150,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Control the computer with Pollinations AI",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+
         epilog="Example: python computer_control.py 'Open docs.new and write a poem praising Codex.'",
     )
     parser.add_argument("goal", help="Goal to send to the AI")
@@ -160,6 +166,7 @@ if __name__ == "__main__":
         help="Maximum steps when --steps=auto",
     )
     parser.add_argument(
+
         "--dry-run",
         action="store_true",
         help="Print actions instead of executing",

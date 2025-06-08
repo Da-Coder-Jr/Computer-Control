@@ -1,5 +1,7 @@
 """Platform-independent actions executed on behalf of the AI."""
 
+
+
 from __future__ import annotations
 
 import base64
@@ -9,6 +11,7 @@ import subprocess
 import sys
 import shutil
 from typing import List, Dict, Sequence
+
 
 
 try:
@@ -23,9 +26,11 @@ class GUIUnavailable(RuntimeError):
 
 def ensure_gui_available() -> None:
     if pyautogui is None:
+
         raise GUIUnavailable(
             "pyautogui is not available or no GUI environment"
         )
+
 
 
 def run_shell(command: str) -> None:
@@ -43,10 +48,12 @@ def click(x: int, y: int, button: str = "left") -> None:
     pyautogui.click(x=x, y=y, button=button)
 
 
+
 def double_click(x: int, y: int, button: str = "left") -> None:
     """Double-click the mouse at x,y."""
     ensure_gui_available()
     pyautogui.doubleClick(x=x, y=y, button=button)
+
 
 
 def write_text(text: str) -> None:
@@ -57,6 +64,7 @@ def write_text(text: str) -> None:
 def press_key(key: str) -> None:
     ensure_gui_available()
     pyautogui.press(key)
+
 
 
 def scroll(amount: int) -> None:
@@ -89,6 +97,7 @@ def draw_path(points: List[Dict[str, int]], duration: float = 0.0) -> None:
 
 def open_app(name: str) -> None:
     """Open an application by name on the current platform."""
+
     try:
         if os.name == "nt":
             os.startfile(name)
@@ -99,15 +108,18 @@ def open_app(name: str) -> None:
                 raise FileNotFoundError(name)
             subprocess.Popen([name])
     except Exception as exc:  # pragma: no cover - platform dependent
+
         raise RuntimeError(
             f"Failed to open application '{name}': {exc}"
         ) from exc
+
 
 
 def create_file(path: str, content: str) -> None:
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
+
 
 
 def copy_file(src: str, dst: str) -> None:
@@ -143,10 +155,12 @@ def hotkey(keys: Sequence[str]) -> None:
 
 def capture_screen() -> str:
     ensure_gui_available()
+
     try:
         image = pyautogui.screenshot()
     except Exception as exc:  # pragma: no cover - GUI may be unavailable
         raise GUIUnavailable(f"Failed to capture screen: {exc}") from exc
+
     try:
         max_dim = max(image.size)
         if max_dim > 800:
@@ -157,5 +171,6 @@ def capture_screen() -> str:
         pass
     buf = io.BytesIO()
     image.save(buf, format="PNG", optimize=True)
+
     data = base64.b64encode(buf.getvalue()).decode()
     return f"data:image/png;base64,{data}"
