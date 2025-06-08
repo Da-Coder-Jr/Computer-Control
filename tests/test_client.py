@@ -1,19 +1,19 @@
 import os
 import sys
 import json
-import shutil
 from typing import Dict, List, Any
 
 
 sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    0,
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..")),
 )
 
 
-import pytest
+import pytest  # noqa: E402
 
-import pollinations_client as client
-import controller
+import pollinations_client as client  # noqa: E402
+import controller  # noqa: E402
 
 
 def test_functions_spec_matches_action_map():
@@ -35,7 +35,6 @@ def test_execute_tool_calls_dry_run(capsys):
                 "name": "open_app",
                 "arguments": json.dumps({"name": "calculator"}),
             }
-
         },
         {
             "function": {
@@ -84,7 +83,6 @@ def test_execute_tool_calls_dry_run(capsys):
     assert "DRY-RUN" in captured.out
 
 
-
 def test_execute_tool_calls_secure(monkeypatch, capsys):
     calls = [
         {
@@ -100,7 +98,6 @@ def test_execute_tool_calls_secure(monkeypatch, capsys):
     assert "Skipped run_shell" in captured.out
 
 
-
 def test_help_runs(tmp_path):
     """computer_control.py --help should exit cleanly."""
     from subprocess import run
@@ -114,7 +111,6 @@ def test_help_runs(tmp_path):
     assert "usage:" in result.stdout.lower()
 
 
-
 def test_open_app_failure(monkeypatch):
     def fake_startfile(_):
         raise FileNotFoundError("missing")
@@ -126,6 +122,7 @@ def test_open_app_failure(monkeypatch):
     monkeypatch.setattr("shutil.which", fake_which)
     with pytest.raises(RuntimeError):
         import controller
+
         controller.open_app("missing_app")
 
 
@@ -134,11 +131,9 @@ def test_open_app_linux(monkeypatch):
 
     called = {}
 
-
     monkeypatch.setattr(
         controller, "os", type("DummyOS", (), {"name": "posix"})
-    )
-
+    )  # noqa: E501
 
     def fake_which(name):
         called["which"] = name
@@ -165,16 +160,31 @@ def test_capture_screen_error(monkeypatch):
     def bad_screenshot():
         raise OSError("scrot missing")
 
-
     monkeypatch.setattr(
         controller,
         "pyautogui",
         type("Dummy", (), {"screenshot": staticmethod(bad_screenshot)}),
     )
 
-
     with pytest.raises(controller.GUIUnavailable):
         controller.capture_screen()
+
+
+def test_capture_screen_jpeg(monkeypatch):
+    import controller
+    from PIL import Image
+
+    def good_screenshot():
+        return Image.new("RGB", (10, 10), "red")
+
+    monkeypatch.setattr(
+        controller,
+        "pyautogui",
+        type("Dummy", (), {"screenshot": staticmethod(good_screenshot)}),
+    )
+
+    url = controller.capture_screen()
+    assert url.startswith("data:image/jpeg;base64,")
 
 
 def test_query_pollinations_payload(monkeypatch):
@@ -187,7 +197,6 @@ def test_query_pollinations_payload(monkeypatch):
         class Response:
 
             ok = True
-
 
             def raise_for_status(self):
                 pass
@@ -211,11 +220,10 @@ def test_query_pollinations_network_error(monkeypatch):
         raise client.requests.RequestException("boom")
 
     monkeypatch.setattr(client.requests, "post", fake_post)
-    monkeypatch.setattr(client.time, "sleep", lambda *_: None)
+    monkeypatch.setattr(client.time, "sleep", lambda *_: None)  # noqa: E501
     messages = [{"role": "user", "content": "hi"}]
     with pytest.raises(RuntimeError):
         client.query_pollinations(messages, retries=2)
-
 
 
 def test_query_pollinations_http_error(monkeypatch):
@@ -231,12 +239,11 @@ def test_query_pollinations_http_error(monkeypatch):
         return Resp()
 
     monkeypatch.setattr(client.requests, "post", fake_post)
-    monkeypatch.setattr(client.time, "sleep", lambda *_: None)
+    monkeypatch.setattr(client.time, "sleep", lambda *_: None)  # noqa: E501
     with pytest.raises(RuntimeError):
         client.query_pollinations(
             [{"role": "user", "content": "hi"}], retries=2
-        )
-
+        )  # noqa: E501
 
 
 def test_main_uses_blank_image(monkeypatch):
@@ -258,11 +265,29 @@ def test_main_uses_blank_image(monkeypatch):
     assert payload.startswith("data:image/png;base64,")
 
 
+def test_main_uses_blank_image_no_dry_run(monkeypatch):
+    import computer_control
+
+    def fake_capture():
+        raise controller.GUIUnavailable("no gui")
+
+    def fake_query(messages: List[Dict[str, Any]]):
+        nonlocal payload
+        payload = messages[1]["content"][1]["image_url"]["url"]
+        return {"choices": [{}]}
+
+    payload = ""
+    monkeypatch.setattr(controller, "capture_screen", fake_capture)
+    monkeypatch.setattr(client, "execute_tool_calls", lambda *_, **__: None)
+    monkeypatch.setattr(client, "query_pollinations", fake_query)
+    computer_control.main("hello", steps=1)
+    assert payload.startswith("data:image/png;base64,")
+
+
 def test_create_file(tmp_path):
     path = tmp_path / "sub" / "note.txt"
     controller.create_file(str(path), "hello")
     assert path.read_text() == "hello"
-
 
 
 def test_copy_and_delete_file(tmp_path):
@@ -288,4 +313,3 @@ def test_analysis_functions():
     summary = client.ACTION_MAP["summarize_codebase"]()
     assert "computer_control.py" in summary
     assert "main" in summary["computer_control.py"]["functions"]
-

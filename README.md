@@ -61,7 +61,9 @@ python computer_control.py "open calculator"
 
 The program automatically loops until the AI reports it is done (up to a
 maximum of 15 steps by default). Use `--max-steps` to override that limit or
-`--steps N` to force an exact number of iterations.
+`--steps N` to force an exact number of iterations. The `--history` flag
+controls how many of the most recent messages are sent to the API each loop,
+which helps avoid HTTP 413 errors from oversized requests.
 
 
 `computer_control.py` lives in the project root, so run it there or provide the
@@ -75,8 +77,8 @@ confirm each action before it runs.
 Add `--dry-run` to print actions instead of executing them. Pollinations will
 respond with JSON tool calls which are executed sequentially. Each iteration
 captures a fresh screenshot so the AI can correct itself. If a GUI isn't
-available (for example, on a headless server), the script falls back to a blank
-image in dry‑run mode.
+available (for example, on a headless server), the script now falls back to a
+blank image so execution can continue.
 
 
 Supported actions include launching apps, running shell commands, moving and
@@ -91,7 +93,8 @@ codebase and provide suggestions.
 
 
 During execution a small popup window displays a progress bar and the current
-action. If a GUI is unavailable the script falls back to simple console output.
+action. When the number of steps isn't specified the bar runs in indeterminate
+mode. If a GUI is unavailable the script falls back to simple console output.
 
 ## Testing
 
