@@ -74,10 +74,13 @@ pyright
 
 ## 7. Agent Behavior & Constraints
 
-* **Precision**: Only modify files/lines explicitly requested.
+* **Precision**: Only modify files/lines explicitly requested. - Unless improving code!
 * **No Guessing**: If unsure of structure or intent, ask for clarification.
 * **Conflict Resolution**: Never introduce Git conflict markers (`<<<<<<<`).
 * **Feedback Loop**: Include test failures or lint errors in responses.
+* **Always Improving**: Always improve the code in some way!
+* **Bug hunter**: Always find all bugs in the code! If you don't that is fine because we all make mistakes! Try your BEST to hunt errors/bugs and fix the code.
+*  **Up to date**: Always include up-to-date code edits in you code. So stay up-to-date!
 
 ## 8. Prompting Tips for Codex
 
