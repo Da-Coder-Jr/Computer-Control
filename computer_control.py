@@ -23,7 +23,9 @@ class PopupUI:
         try:
             self.root = tk.Tk()
             self.root.title("Computer Control")
-            self.progress = ttk.Progressbar(self.root, maximum=max_steps, length=300)
+            self.progress = ttk.Progressbar(
+                self.root, maximum=max_steps, length=300
+            )
             self.progress.pack(padx=10, pady=10)
             self.label = ttk.Label(self.root, text="Starting...")
             self.label.pack(padx=10, pady=10)
@@ -103,7 +105,9 @@ def main(
         message = choice.get("message", {})
         tool_calls = message.get("tool_calls")
         if tool_calls:
-            client.execute_tool_calls(tool_calls, dry_run=dry_run, secure=secure)
+            client.execute_tool_calls(
+                tool_calls, dry_run=dry_run, secure=secure
+            )
             ui.update(i + 1, f"{tool_calls[0].get('function',{}).get('name')}")
         if content := message.get("content"):
             print(content)
@@ -156,7 +160,9 @@ if __name__ == "__main__":
         help="Maximum steps when --steps=auto",
     )
     parser.add_argument(
-        "--dry-run", action="store_true", help="Print actions instead of executing"
+        "--dry-run",
+        action="store_true",
+        help="Print actions instead of executing",
     )
     parser.add_argument(
         "--secure",

@@ -4,7 +4,9 @@ import json
 import shutil
 from typing import Dict, List, Any
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+)
 
 import pytest
 
@@ -126,7 +128,9 @@ def test_open_app_linux(monkeypatch):
 
     called = {}
 
-    monkeypatch.setattr(controller, "os", type("DummyOS", (), {"name": "posix"}))
+    monkeypatch.setattr(
+        controller, "os", type("DummyOS", (), {"name": "posix"})
+    )
 
     def fake_which(name):
         called["which"] = name
@@ -216,7 +220,9 @@ def test_query_pollinations_http_error(monkeypatch):
     monkeypatch.setattr(client.requests, "post", fake_post)
     monkeypatch.setattr(client.time, "sleep", lambda *_: None)
     with pytest.raises(RuntimeError):
-        client.query_pollinations([{"role": "user", "content": "hi"}], retries=2)
+        client.query_pollinations(
+            [{"role": "user", "content": "hi"}], retries=2
+        )
 
 
 def test_main_uses_blank_image(monkeypatch):
@@ -252,3 +258,18 @@ def test_copy_and_delete_file(tmp_path):
     assert dst.read_text() == "hi"
     controller.delete_file(str(src))
     assert not src.exists()
+
+
+def test_analysis_functions():
+    files = client.ACTION_MAP["list_python_files"]()
+    assert "computer_control.py" in files
+
+    text = client.ACTION_MAP["read_file"]("README.md")
+    assert "Computer-Control" in text
+
+    matches = client.ACTION_MAP["search_code"]("def main")
+    assert any(m["file"].endswith("computer_control.py") for m in matches)
+
+    summary = client.ACTION_MAP["summarize_codebase"]()
+    assert "computer_control.py" in summary
+    assert "main" in summary["computer_control.py"]["functions"]

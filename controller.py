@@ -23,7 +23,9 @@ class GUIUnavailable(RuntimeError):
 
 def ensure_gui_available() -> None:
     if pyautogui is None:
-        raise GUIUnavailable("pyautogui is not available or no GUI environment")
+        raise GUIUnavailable(
+            "pyautogui is not available or no GUI environment"
+        )
 
 
 def run_shell(command: str) -> None:
@@ -97,7 +99,9 @@ def open_app(name: str) -> None:
                 raise FileNotFoundError(name)
             subprocess.Popen([name])
     except Exception as exc:  # pragma: no cover - platform dependent
-        raise RuntimeError(f"Failed to open application '{name}': {exc}") from exc
+        raise RuntimeError(
+            f"Failed to open application '{name}': {exc}"
+        ) from exc
 
 
 def create_file(path: str, content: str) -> None:

@@ -79,6 +79,11 @@ clicking the mouse (including double-clicks and drags), scrolling, drawing with
 the mouse, typing text, pressing keys, holding or releasing keys, pressing
 hotkeys, copying and deleting files, and creating new files.
 
+The AI can also inspect the repository itself. Functions allow it to list
+Python files, read their contents, search for text, and produce a summary of
+functions and classes. This context-aware access lets the model navigate the
+codebase and provide suggestions.
+
 
 During execution a small popup window displays a progress bar and the current
 action. If a GUI is unavailable the script falls back to simple console output.
