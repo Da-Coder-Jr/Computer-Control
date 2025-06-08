@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 import argparse
-import time
 from typing import List, Dict, Any, Optional
 import base64
 import io
@@ -13,7 +12,6 @@ import controller
 import pollinations_client as client
 
 
-
 class PopupUI:
     """Simple Tkinter-based progress popup."""
 
@@ -22,7 +20,11 @@ class PopupUI:
         try:
             self.root = tk.Tk()
             self.root.title("Computer Control")
-            mode = "determinate" if total_steps is not None else "indeterminate"
+
+            mode = (
+                "determinate" if total_steps is not None else "indeterminate"
+            )  # noqa: E501
+
             self.progress = ttk.Progressbar(
                 self.root,
                 maximum=(total_steps or 100),
@@ -69,7 +71,6 @@ class PopupUI:
         print("Goal complete")
 
 
-
 def blank_image() -> str:
     """Return a tiny base64 PNG used when screenshots fail."""
     buf = io.BytesIO()
@@ -100,12 +101,8 @@ def main(
     try:
         screenshot = controller.capture_screen()
     except controller.GUIUnavailable as exc:
-        if dry_run:
-
-            print(f"Warning: {exc}; using blank screenshot")
-            screenshot = blank_image()
-        else:
-            raise
+        print(f"Warning: {exc}; using blank screenshot")
+        screenshot = blank_image()
 
     messages.append(
         {
@@ -117,10 +114,7 @@ def main(
         }
     )
 
-
     loop_limit = steps if steps is not None else max_steps
-
-    start_time = time.perf_counter()
 
     for i in range(loop_limit):
         data = client.query_pollinations(messages[-history:])
@@ -130,8 +124,10 @@ def main(
         if tool_calls:
             client.execute_tool_calls(
                 tool_calls, dry_run=dry_run, secure=secure
-            )
-            ui.update(i + 1, f"{tool_calls[0].get('function',{}).get('name')}")
+            )  # noqa: E501
+            ui.update(
+                i + 1, f"{tool_calls[0].get('function', {}).get('name')}"
+            )  # noqa: E501
         if content := message.get("content"):
             print(content)
         messages.append(
@@ -144,11 +140,8 @@ def main(
         try:
             screenshot = controller.capture_screen()
         except controller.GUIUnavailable as exc:
-            if dry_run:
-                print(f"Warning: {exc}; using blank screenshot")
-                screenshot = blank_image()
-            else:
-                raise
+            print(f"Warning: {exc}; using blank screenshot")
+            screenshot = blank_image()
         messages.append(
             {
                 "role": "user",
@@ -168,8 +161,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Control the computer with Pollinations AI",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-
-        epilog="Example: python computer_control.py 'Open docs.new and write a poem praising Codex.'",
+        epilog=(
+            "Example: python computer_control.py "
+            "'Open docs.new and write a poem praising Codex.'"
+        ),
     )
     parser.add_argument("goal", help="Goal to send to the AI")
     parser.add_argument(
@@ -184,7 +179,6 @@ if __name__ == "__main__":
         help="Maximum steps when --steps=auto",
     )
     parser.add_argument(
-
         "--dry-run",
         action="store_true",
         help="Print actions instead of executing",
