@@ -40,6 +40,20 @@ def test_execute_tool_calls_dry_run(capsys):
         },
         {
             "function": {
+                "name": "double_click",
+                "arguments": json.dumps({"x": 10, "y": 10}),
+            },
+        },
+        {
+            "function": {
+                "name": "drag_mouse",
+                "arguments": json.dumps(
+                    {"from_x": 0, "from_y": 0, "to_x": 1, "to_y": 1}
+                ),
+            },
+        },
+        {
+            "function": {
                 "name": "draw_path",
                 "arguments": json.dumps(
                     {"points": [{"x": 0, "y": 0}, {"x": 1, "y": 1}]}

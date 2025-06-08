@@ -75,8 +75,8 @@ available (for example, on a headless server), the script falls back to a blank
 image in dry‑run mode.
 
 Supported actions include launching apps, running shell commands, moving and
-clicking the mouse, scrolling, drawing with the mouse, typing text, pressing keys,
-and creating files.
+clicking the mouse (including double-clicks and drags), scrolling, drawing with
+the mouse, typing text, pressing keys, and creating files.
 
 
 During execution a small popup window displays a progress bar and the current

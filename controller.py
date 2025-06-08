@@ -41,6 +41,12 @@ def click(x: int, y: int, button: str = "left") -> None:
     pyautogui.click(x=x, y=y, button=button)
 
 
+def double_click(x: int, y: int, button: str = "left") -> None:
+    """Double-click the mouse at x,y."""
+    ensure_gui_available()
+    pyautogui.doubleClick(x=x, y=y, button=button)
+
+
 def write_text(text: str) -> None:
     ensure_gui_available()
     pyautogui.write(text)
@@ -55,6 +61,15 @@ def scroll(amount: int) -> None:
     """Scroll the mouse wheel by the given amount."""
     ensure_gui_available()
     pyautogui.scroll(amount)
+
+
+def drag_mouse(
+    from_x: int, from_y: int, to_x: int, to_y: int, duration: float = 0.0
+) -> None:
+    """Drag the mouse from one coordinate to another."""
+    ensure_gui_available()
+    pyautogui.moveTo(from_x, from_y)
+    pyautogui.dragTo(to_x, to_y, duration=duration, button="left")
 
 
 def draw_path(points: List[Dict[str, int]], duration: float = 0.0) -> None:

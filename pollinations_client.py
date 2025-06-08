@@ -69,6 +69,26 @@ FUNCTIONS_SPEC: List[Dict[str, Any]] = [
     {
         "type": "function",
         "function": {
+            "name": "double_click",
+            "description": "Double-click the mouse at x,y",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "x": {"type": "integer"},
+                    "y": {"type": "integer"},
+                    "button": {
+                        "type": "string",
+                        "enum": ["left", "right", "middle"],
+                        "default": "left",
+                    },
+                },
+                "required": ["x", "y"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "write_text",
             "description": "Type text at the keyboard",
             "parameters": {
@@ -99,6 +119,24 @@ FUNCTIONS_SPEC: List[Dict[str, Any]] = [
                 "type": "object",
                 "properties": {"amount": {"type": "integer"}},
                 "required": ["amount"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "drag_mouse",
+            "description": "Drag the mouse from one point to another",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "from_x": {"type": "integer"},
+                    "from_y": {"type": "integer"},
+                    "to_x": {"type": "integer"},
+                    "to_y": {"type": "integer"},
+                    "duration": {"type": "number", "default": 0.0},
+                },
+                "required": ["from_x", "from_y", "to_x", "to_y"],
             },
         },
     },
@@ -161,9 +199,11 @@ ACTION_MAP: Dict[str, Callable[..., None]] = {
     "run_shell": controller.run_shell,
     "move_mouse": controller.move_mouse,
     "click": controller.click,
+    "double_click": controller.double_click,
     "write_text": controller.write_text,
     "press_key": controller.press_key,
     "scroll": controller.scroll,
+    "drag_mouse": controller.drag_mouse,
     "draw_path": controller.draw_path,
     "open_app": controller.open_app,
     "create_file": controller.create_file,
