@@ -313,3 +313,56 @@ def test_analysis_functions():
     summary = client.ACTION_MAP["summarize_codebase"]()
     assert "computer_control.py" in summary
     assert "main" in summary["computer_control.py"]["functions"]
+
+
+def test_execute_tool_calls_returns_messages():
+    call = {
+        "id": "abc",
+        "function": {
+            "name": "run_shell",
+            "arguments": json.dumps({"command": "echo hi"}),
+        },
+    }
+    msgs = client.execute_tool_calls([call], dry_run=True)
+    assert msgs[0]["role"] == "tool"
+    assert msgs[0]["tool_call_id"] == "abc"
+
+
+def test_main_unlimited(monkeypatch):
+    import computer_control
+
+    responses = [
+        {
+            "choices": [
+                {
+                    "message": {
+                        "tool_calls": [
+                            {
+                                "id": "1",
+                                "function": {"name": "run_shell", "arguments": "{}"},
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {"choices": [{"message": {"content": "done", "done": True}}]},
+    ]
+    idx = {"i": 0}
+
+    def fake_query(_):
+        res = responses[idx["i"]]
+        idx["i"] += 1
+        return res
+
+    monkeypatch.setattr(client, "query_pollinations", fake_query)
+    monkeypatch.setattr(
+        client,
+        "execute_tool_calls",
+        lambda *_, **__: [{"role": "tool", "tool_call_id": "1", "content": "ok"}],
+    )
+    monkeypatch.setattr(
+        controller, "capture_screen", lambda: "data:image/png;base64,abc"
+    )
+    computer_control.main("hi", max_steps=0, dry_run=True)
+    assert idx["i"] == 2

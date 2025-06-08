@@ -18,9 +18,7 @@ POLLINATIONS_API = os.environ.get(
     "POLLINATIONS_API", "https://text.pollinations.ai/openai"
 )
 
-POLLINATIONS_REFERRER = os.environ.get(
-    "POLLINATIONS_REFERRER", "https://example.com"
-)
+POLLINATIONS_REFERRER = os.environ.get("POLLINATIONS_REFERRER", "https://example.com")
 
 
 SYSTEM_PROMPT = (
@@ -52,7 +50,6 @@ FUNCTIONS_SPEC: List[Dict[str, Any]] = [
                     "x": {"type": "integer"},
                     "y": {"type": "integer"},
                 },
-
                 "required": ["x", "y"],
             },
         },
@@ -100,7 +97,6 @@ FUNCTIONS_SPEC: List[Dict[str, Any]] = [
     {
         "type": "function",
         "function": {
-
             "name": "write_text",
             "description": "Type text at the keyboard",
             "parameters": {
@@ -125,7 +121,6 @@ FUNCTIONS_SPEC: List[Dict[str, Any]] = [
     {
         "type": "function",
         "function": {
-
             "name": "scroll",
             "description": "Scroll the mouse wheel",
             "parameters": {
@@ -182,7 +177,6 @@ FUNCTIONS_SPEC: List[Dict[str, Any]] = [
     {
         "type": "function",
         "function": {
-
             "name": "open_app",
             "description": "Open an application by name",
             "parameters": {
@@ -199,17 +193,14 @@ FUNCTIONS_SPEC: List[Dict[str, Any]] = [
             "description": "Create a file with the given content",
             "parameters": {
                 "type": "object",
-
                 "properties": {
                     "path": {"type": "string"},
                     "content": {"type": "string"},
                 },
-
                 "required": ["path", "content"],
             },
         },
     },
-
     {
         "type": "function",
         "function": {
@@ -319,7 +310,6 @@ FUNCTIONS_SPEC: List[Dict[str, Any]] = [
             "parameters": {"type": "object", "properties": {}, "required": []},
         },
     },
-
 ]
 
 ACTION_MAP: Dict[str, Callable[..., None]] = {
@@ -349,7 +339,6 @@ ACTION_MAP: Dict[str, Callable[..., None]] = {
 def query_pollinations(
     messages: List[Dict[str, Any]], retries: int = 3
 ) -> Dict[str, Any]:
-
     """Send ``messages`` to Pollinations and return the JSON response."""
 
     payload = {
@@ -370,9 +359,7 @@ def query_pollinations(
             )
         except requests.RequestException as exc:  # network issues
             if attempt == retries:
-                raise RuntimeError(
-                    "Failed to contact Pollinations API"
-                ) from exc
+                raise RuntimeError("Failed to contact Pollinations API") from exc
             time.sleep(delay)
             delay *= 2
             continue
@@ -388,7 +375,6 @@ def query_pollinations(
 
         return response.json()
 
-
     # should never reach here
     raise RuntimeError("Failed to contact Pollinations API")
 
@@ -398,8 +384,10 @@ def execute_tool_calls(
     dry_run: bool = False,
     secure: bool = False,
     console: Optional[Any] = None,
-) -> None:
-    """Run the tool calls returned by the model."""
+) -> List[Dict[str, Any]]:
+    """Run the tool calls returned by the model and return tool messages."""
+
+    results: List[Dict[str, Any]] = []
 
     for call in tool_calls:
         name = call.get("function", {}).get("name")
@@ -412,7 +400,6 @@ def execute_tool_calls(
         try:
             params = json.loads(args) if args else {}
         except json.JSONDecodeError:
-
             print(f"Invalid arguments for {name}: {args}")
             continue
         print(f"{name}({params})")
@@ -420,12 +407,42 @@ def execute_tool_calls(
             resp = input(f"Execute {name}? [y/N] ")
             if resp.lower() not in ("y", "yes"):
                 print(f"Skipped {name}")
+                results.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": call.get("id", ""),
+                        "content": "skipped",
+                    }
+                )
                 continue
         if dry_run:
             print(f"[DRY-RUN] {name}({params})")
+            results.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": call.get("id", ""),
+                    "content": "dry-run",
+                }
+            )
             continue
         try:
-            func(**params)
+            result = func(**params)
             print(f"Executed {name}")
+            results.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": call.get("id", ""),
+                    "content": "" if result is None else str(result),
+                }
+            )
         except Exception as exc:  # pylint: disable=broad-except
             print(f"Error executing {name}: {exc}")
+            results.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": call.get("id", ""),
+                    "content": f"error: {exc}",
+                }
+            )
+
+    return results

@@ -79,10 +79,9 @@ def blank_image() -> str:
 
 
 def main(
-
     goal: str,
     steps: Optional[int] = None,
-    max_steps: int = 15,
+    max_steps: int = 0,
     dry_run: bool = False,
     secure: bool = False,
     history: int = 8,
@@ -94,6 +93,7 @@ def main(
     growing too large and triggering HTTP 413 errors.
     """
     ui = PopupUI(steps)
+    print("AI is taking control. Do not touch your computer.")
     messages: List[Dict[str, Any]] = [
         {"role": "system", "content": client.SYSTEM_PROMPT}
     ]
@@ -115,14 +115,15 @@ def main(
     )
 
     loop_limit = steps if steps is not None else max_steps
-
-    for i in range(loop_limit):
+    unlimited = steps is None and loop_limit <= 0
+    i = 0
+    while True:
         data = client.query_pollinations(messages[-history:])
         choice = data.get("choices", [{}])[0]
         message = choice.get("message", {})
         tool_calls = message.get("tool_calls")
         if tool_calls:
-            client.execute_tool_calls(
+            tool_messages = client.execute_tool_calls(
                 tool_calls, dry_run=dry_run, secure=secure
             )  # noqa: E501
             ui.update(
@@ -137,6 +138,8 @@ def main(
                 **({"tool_calls": tool_calls} if tool_calls else {}),
             }
         )
+        if tool_calls:
+            messages.extend(tool_messages)
         try:
             screenshot = controller.capture_screen()
         except controller.GUIUnavailable as exc:
@@ -153,6 +156,9 @@ def main(
         )
         ui.update(i + 1, f"step {i + 1}")
         if data.get("done") or message.get("done"):
+            break
+        i += 1
+        if not unlimited and i >= loop_limit:
             break
     ui.done()
 
@@ -175,8 +181,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--max-steps",
         type=int,
-        default=15,
-        help="Maximum steps when --steps=auto",
+        default=0,
+        help="Maximum steps when --steps=auto (0 for unlimited)",
     )
     parser.add_argument(
         "--dry-run",
