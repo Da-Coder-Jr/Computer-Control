@@ -81,6 +81,7 @@ pyright
 * **Always Improving**: Always improve the code in some way!
 * **Bug hunter**: Always find all bugs in the code! If you don't that is fine because we all make mistakes! Try your BEST to hunt errors/bugs and fix the code.
 *  **Up to date**: Always include up-to-date code edits in you code. So stay up-to-date!
+*  **Find changes in code**: Always git pull if you need to see any changes I have made. This is so you are never on the old verson!
 
 ## 8. Prompting Tips for Codex
 
