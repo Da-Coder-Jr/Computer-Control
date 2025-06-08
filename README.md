@@ -29,7 +29,6 @@ available.
    pip install -r requirements.txt
    ```
 
-
 2. Run a goal in automatic mode (the script keeps looping until the AI
    signals it is done or reaches 15 steps):
 
@@ -38,21 +37,23 @@ available.
    ```
 
    Add `--dry-run` to preview the tool calls without actually executing
-   them.
+   them. Use `--secure` to confirm each step before it executes.
 
 3. Run the automated tests (optional):
 
    ```bash
    pytest -q
    ```
-   
+
 ## Usage
 
 Set the `POLLINATIONS_API` environment variable to override the default endpoint
 (`https://text.pollinations.ai/openai`). Optionally specify
 `POLLINATIONS_REFERRER` to identify your app.
 
-Run the script from the repository root with a goal:
+
+Run the script **from the repository root** with a goal:
+
 
 ```bash
 python computer_control.py "open calculator"
@@ -62,13 +63,14 @@ The program automatically loops until the AI reports it is done (up to a
 maximum of 15 steps by default). Use `--max-steps` to override that limit or
 `--steps N` to force an exact number of iterations.
 
-`computer_control.py` lives in the project root, so reference it directly
-or with the full path if running from another directory.
 
-
+`computer_control.py` lives in the project root, so run it there or provide the
+full path if invoking from another directory.
 
 The AI may request functions like `open_app` to launch applications. These tool
-calls are executed automatically unless `--dry-run` is used.
+calls are executed automatically unless `--dry-run` is used. Use `--secure` to
+confirm each action before it runs.
+
 
 Add `--dry-run` to print actions instead of executing them. Pollinations will
 respond with JSON tool calls which are executed sequentially. Each iteration
@@ -77,9 +79,19 @@ available (for example, on a headless server), the script falls back to a blank
 image in dry‑run mode.
 
 
+Supported actions include launching apps, running shell commands, moving and
+clicking the mouse (including double-clicks and drags), scrolling, drawing with
+the mouse, typing text, pressing keys, holding or releasing keys, pressing
+hotkeys, copying and deleting files, and creating new files.
 
-The Rich-powered interface displays a progress bar and shows each tool call in
-a highlighted panel.
+The AI can also inspect the repository itself. Functions allow it to list
+Python files, read their contents, search for text, and produce a summary of
+functions and classes. This context-aware access lets the model navigate the
+codebase and provide suggestions.
+
+
+During execution a small popup window displays a progress bar and the current
+action. If a GUI is unavailable the script falls back to simple console output.
 
 ## Testing
 
@@ -89,10 +101,12 @@ Run the automated test suite after installing the requirements:
 pytest -q
 ```
 
+
 **Warning:** Allowing a remote AI to issue commands on your machine can be
 hazardous. Review output carefully or use the `--dry-run` option when testing.
 This example is provided on a best-effort basis and may require tweaking for
 your specific setup.
+
 
 
 This project is released under the terms of the MIT License; see

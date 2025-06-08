@@ -4,7 +4,11 @@ import json
 import shutil
 from typing import Dict, List, Any
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+sys.path.insert(
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+)
+
 
 import pytest
 
@@ -33,10 +37,68 @@ def test_execute_tool_calls_dry_run(capsys):
             }
 
         },
+        {
+            "function": {
+                "name": "scroll",
+                "arguments": json.dumps({"amount": 100}),
+            }
+        },
+        {
+            "function": {
+                "name": "double_click",
+                "arguments": json.dumps({"x": 10, "y": 10}),
+            },
+        },
+        {
+            "function": {
+                "name": "drag_mouse",
+                "arguments": json.dumps(
+                    {"from_x": 0, "from_y": 0, "to_x": 1, "to_y": 1}
+                ),
+            },
+        },
+        {
+            "function": {
+                "name": "draw_path",
+                "arguments": json.dumps(
+                    {"points": [{"x": 0, "y": 0}, {"x": 1, "y": 1}]}
+                ),
+            },
+        },
+        {
+            "function": {
+                "name": "hotkey",
+                "arguments": json.dumps({"keys": ["ctrl", "c"]}),
+            },
+        },
+        {
+            "function": {
+                "name": "copy_file",
+                "arguments": json.dumps({"src": "a.txt", "dst": "b.txt"}),
+            },
+        },
     ]
-    client.execute_tool_calls(calls, dry_run=True)
+    client.execute_tool_calls(calls, dry_run=True, secure=False)
+
     captured = capsys.readouterr()
     assert "DRY-RUN" in captured.out
+
+
+
+def test_execute_tool_calls_secure(monkeypatch, capsys):
+    calls = [
+        {
+            "function": {
+                "name": "run_shell",
+                "arguments": json.dumps({"command": "echo hello"}),
+            }
+        }
+    ]
+    monkeypatch.setattr("builtins.input", lambda *_: "n")
+    client.execute_tool_calls(calls, dry_run=False, secure=True)
+    captured = capsys.readouterr()
+    assert "Skipped run_shell" in captured.out
+
 
 
 def test_help_runs(tmp_path):
@@ -72,7 +134,11 @@ def test_open_app_linux(monkeypatch):
 
     called = {}
 
-    monkeypatch.setattr(controller, "os", type("DummyOS", (), {"name": "posix"}))
+
+    monkeypatch.setattr(
+        controller, "os", type("DummyOS", (), {"name": "posix"})
+    )
+
 
     def fake_which(name):
         called["which"] = name
@@ -119,6 +185,10 @@ def test_query_pollinations_payload(monkeypatch):
         captured["json"] = json
 
         class Response:
+
+            ok = True
+
+
             def raise_for_status(self):
                 pass
 
@@ -147,6 +217,28 @@ def test_query_pollinations_network_error(monkeypatch):
         client.query_pollinations(messages, retries=2)
 
 
+
+def test_query_pollinations_http_error(monkeypatch):
+    class Resp:
+        status_code = 400
+        ok = False
+        text = "bad"
+
+        def raise_for_status(self):
+            raise client.requests.HTTPError("bad request")
+
+    def fake_post(*_, **__):
+        return Resp()
+
+    monkeypatch.setattr(client.requests, "post", fake_post)
+    monkeypatch.setattr(client.time, "sleep", lambda *_: None)
+    with pytest.raises(RuntimeError):
+        client.query_pollinations(
+            [{"role": "user", "content": "hi"}], retries=2
+        )
+
+
+
 def test_main_uses_blank_image(monkeypatch):
     import computer_control
 
@@ -170,3 +262,30 @@ def test_create_file(tmp_path):
     path = tmp_path / "sub" / "note.txt"
     controller.create_file(str(path), "hello")
     assert path.read_text() == "hello"
+
+
+
+def test_copy_and_delete_file(tmp_path):
+    src = tmp_path / "a.txt"
+    dst = tmp_path / "b.txt"
+    src.write_text("hi")
+    controller.copy_file(str(src), str(dst))
+    assert dst.read_text() == "hi"
+    controller.delete_file(str(src))
+    assert not src.exists()
+
+
+def test_analysis_functions():
+    files = client.ACTION_MAP["list_python_files"]()
+    assert "computer_control.py" in files
+
+    text = client.ACTION_MAP["read_file"]("README.md")
+    assert "Computer-Control" in text
+
+    matches = client.ACTION_MAP["search_code"]("def main")
+    assert any(m["file"].endswith("computer_control.py") for m in matches)
+
+    summary = client.ACTION_MAP["summarize_codebase"]()
+    assert "computer_control.py" in summary
+    assert "main" in summary["computer_control.py"]["functions"]
+

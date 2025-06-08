@@ -1,4 +1,7 @@
 """Platform-independent actions executed on behalf of the AI."""
+
+
+
 from __future__ import annotations
 
 import base64
@@ -7,6 +10,8 @@ import os
 import subprocess
 import sys
 import shutil
+from typing import List, Dict, Sequence
+
 
 
 try:
@@ -21,7 +26,11 @@ class GUIUnavailable(RuntimeError):
 
 def ensure_gui_available() -> None:
     if pyautogui is None:
-        raise GUIUnavailable("pyautogui is not available or no GUI environment")
+
+        raise GUIUnavailable(
+            "pyautogui is not available or no GUI environment"
+        )
+
 
 
 def run_shell(command: str) -> None:
@@ -39,6 +48,14 @@ def click(x: int, y: int, button: str = "left") -> None:
     pyautogui.click(x=x, y=y, button=button)
 
 
+
+def double_click(x: int, y: int, button: str = "left") -> None:
+    """Double-click the mouse at x,y."""
+    ensure_gui_available()
+    pyautogui.doubleClick(x=x, y=y, button=button)
+
+
+
 def write_text(text: str) -> None:
     ensure_gui_available()
     pyautogui.write(text)
@@ -49,11 +66,38 @@ def press_key(key: str) -> None:
     pyautogui.press(key)
 
 
+
+def scroll(amount: int) -> None:
+    """Scroll the mouse wheel by the given amount."""
+    ensure_gui_available()
+    pyautogui.scroll(amount)
+
+
+def drag_mouse(
+    from_x: int, from_y: int, to_x: int, to_y: int, duration: float = 0.0
+) -> None:
+    """Drag the mouse from one coordinate to another."""
+    ensure_gui_available()
+    pyautogui.moveTo(from_x, from_y)
+    pyautogui.dragTo(to_x, to_y, duration=duration, button="left")
+
+
+def draw_path(points: List[Dict[str, int]], duration: float = 0.0) -> None:
+    """Draw by dragging the mouse through a list of x,y coordinates."""
+    ensure_gui_available()
+    if not points:
+        return
+    start = points[0]
+    pyautogui.moveTo(start["x"], start["y"])
+    pyautogui.mouseDown()
+    for pt in points[1:]:
+        pyautogui.dragTo(pt["x"], pt["y"], duration=duration, button="left")
+    pyautogui.mouseUp()
+
+
 def open_app(name: str) -> None:
     """Open an application by name on the current platform."""
 
-    
-    
     try:
         if os.name == "nt":
             os.startfile(name)
@@ -64,7 +108,11 @@ def open_app(name: str) -> None:
                 raise FileNotFoundError(name)
             subprocess.Popen([name])
     except Exception as exc:  # pragma: no cover - platform dependent
-        raise RuntimeError(f"Failed to open application '{name}': {exc}") from exc
+
+        raise RuntimeError(
+            f"Failed to open application '{name}': {exc}"
+        ) from exc
+
 
 
 def create_file(path: str, content: str) -> None:
@@ -73,16 +121,56 @@ def create_file(path: str, content: str) -> None:
         f.write(content)
 
 
+
+def copy_file(src: str, dst: str) -> None:
+    """Copy a file from ``src`` to ``dst``."""
+    shutil.copy(src, dst)
+
+
+def delete_file(path: str) -> None:
+    """Delete a file if it exists."""
+    try:
+        os.remove(path)
+    except FileNotFoundError:
+        raise RuntimeError(f"File not found: {path}") from None
+
+
+def key_down(key: str) -> None:
+    """Hold down a key until released."""
+    ensure_gui_available()
+    pyautogui.keyDown(key)
+
+
+def key_up(key: str) -> None:
+    """Release a previously held key."""
+    ensure_gui_available()
+    pyautogui.keyUp(key)
+
+
+def hotkey(keys: Sequence[str]) -> None:
+    """Press a combination of keys."""
+    ensure_gui_available()
+    pyautogui.hotkey(*keys)
+
+
 def capture_screen() -> str:
     ensure_gui_available()
-    
+
     try:
         image = pyautogui.screenshot()
     except Exception as exc:  # pragma: no cover - GUI may be unavailable
         raise GUIUnavailable(f"Failed to capture screen: {exc}") from exc
 
-        
+    try:
+        max_dim = max(image.size)
+        if max_dim > 800:
+            ratio = 800 / max_dim
+            new_size = (int(image.width * ratio), int(image.height * ratio))
+            image = image.resize(new_size)
+    except Exception:
+        pass
     buf = io.BytesIO()
-    image.save(buf, format="PNG")
+    image.save(buf, format="PNG", optimize=True)
+
     data = base64.b64encode(buf.getvalue()).decode()
     return f"data:image/png;base64,{data}"
