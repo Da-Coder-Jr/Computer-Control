@@ -8,7 +8,7 @@ import os
 import subprocess
 import sys
 import shutil
-from typing import List, Dict
+from typing import List, Dict, Sequence
 
 
 try:
@@ -104,6 +104,37 @@ def create_file(path: str, content: str) -> None:
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
+
+
+def copy_file(src: str, dst: str) -> None:
+    """Copy a file from ``src`` to ``dst``."""
+    shutil.copy(src, dst)
+
+
+def delete_file(path: str) -> None:
+    """Delete a file if it exists."""
+    try:
+        os.remove(path)
+    except FileNotFoundError:
+        raise RuntimeError(f"File not found: {path}") from None
+
+
+def key_down(key: str) -> None:
+    """Hold down a key until released."""
+    ensure_gui_available()
+    pyautogui.keyDown(key)
+
+
+def key_up(key: str) -> None:
+    """Release a previously held key."""
+    ensure_gui_available()
+    pyautogui.keyUp(key)
+
+
+def hotkey(keys: Sequence[str]) -> None:
+    """Press a combination of keys."""
+    ensure_gui_available()
+    pyautogui.hotkey(*keys)
 
 
 def capture_screen() -> str:

@@ -193,6 +193,75 @@ FUNCTIONS_SPEC: List[Dict[str, Any]] = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "copy_file",
+            "description": "Copy a file to a new location",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "src": {"type": "string"},
+                    "dst": {"type": "string"},
+                },
+                "required": ["src", "dst"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "delete_file",
+            "description": "Delete a file",
+            "parameters": {
+                "type": "object",
+                "properties": {"path": {"type": "string"}},
+                "required": ["path"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "key_down",
+            "description": "Hold down a keyboard key",
+            "parameters": {
+                "type": "object",
+                "properties": {"key": {"type": "string"}},
+                "required": ["key"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "key_up",
+            "description": "Release a keyboard key",
+            "parameters": {
+                "type": "object",
+                "properties": {"key": {"type": "string"}},
+                "required": ["key"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "hotkey",
+            "description": "Press a combination of keys",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "keys": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "minItems": 1,
+                    },
+                },
+                "required": ["keys"],
+            },
+        },
+    },
 ]
 
 ACTION_MAP: Dict[str, Callable[..., None]] = {
@@ -207,6 +276,11 @@ ACTION_MAP: Dict[str, Callable[..., None]] = {
     "draw_path": controller.draw_path,
     "open_app": controller.open_app,
     "create_file": controller.create_file,
+    "copy_file": controller.copy_file,
+    "delete_file": controller.delete_file,
+    "key_down": controller.key_down,
+    "key_up": controller.key_up,
+    "hotkey": controller.hotkey,
 }
 
 

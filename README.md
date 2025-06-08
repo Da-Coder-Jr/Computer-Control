@@ -76,7 +76,8 @@ image in dry‑run mode.
 
 Supported actions include launching apps, running shell commands, moving and
 clicking the mouse (including double-clicks and drags), scrolling, drawing with
-the mouse, typing text, pressing keys, and creating files.
+the mouse, typing text, pressing keys, holding or releasing keys, pressing
+hotkeys, copying and deleting files, and creating new files.
 
 
 During execution a small popup window displays a progress bar and the current

@@ -60,6 +60,18 @@ def test_execute_tool_calls_dry_run(capsys):
                 ),
             },
         },
+        {
+            "function": {
+                "name": "hotkey",
+                "arguments": json.dumps({"keys": ["ctrl", "c"]}),
+            },
+        },
+        {
+            "function": {
+                "name": "copy_file",
+                "arguments": json.dumps({"src": "a.txt", "dst": "b.txt"}),
+            },
+        },
     ]
     client.execute_tool_calls(calls, dry_run=True, secure=False)
     captured = capsys.readouterr()
@@ -230,3 +242,13 @@ def test_create_file(tmp_path):
     path = tmp_path / "sub" / "note.txt"
     controller.create_file(str(path), "hello")
     assert path.read_text() == "hello"
+
+
+def test_copy_and_delete_file(tmp_path):
+    src = tmp_path / "a.txt"
+    dst = tmp_path / "b.txt"
+    src.write_text("hi")
+    controller.copy_file(str(src), str(dst))
+    assert dst.read_text() == "hi"
+    controller.delete_file(str(src))
+    assert not src.exists()
