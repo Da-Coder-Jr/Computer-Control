@@ -20,9 +20,11 @@ class PopupUI:
         try:
             self.root = tk.Tk()
             self.root.title("Computer Control")
+
             mode = (
                 "determinate" if total_steps is not None else "indeterminate"
             )  # noqa: E501
+
             self.progress = ttk.Progressbar(
                 self.root,
                 maximum=(total_steps or 100),
@@ -77,6 +79,7 @@ def blank_image() -> str:
 
 
 def main(
+
     goal: str,
     steps: Optional[int] = None,
     max_steps: int = 15,
