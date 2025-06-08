@@ -2,3 +2,4 @@ requests>=2.31
 pyautogui>=0.9
 pytest>=8.0
 pillow>=11.0
+rich-argparse>=0.2.0
