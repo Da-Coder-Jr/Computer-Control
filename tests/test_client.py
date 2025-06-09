@@ -392,3 +392,19 @@ def test_trim_history_avoids_partial_pairs():
     assert trimmed[0]["role"] == "user"
     assert trimmed[1]["role"] == "assistant"
     assert trimmed[2]["role"] == "tool"
+
+
+def test_trim_history_drops_trailing_tool_call():
+    from computer_control import trim_history  # noqa: E402
+
+    msgs = [
+        {"role": "system", "content": "hi"},
+        {"role": "user", "content": "goal"},
+        {"role": "assistant", "tool_calls": [{"id": "1"}]},
+        {"role": "tool", "tool_call_id": "1", "content": "ok"},
+        {"role": "user", "content": "s1"},
+        {"role": "assistant", "tool_calls": [{"id": "2"}]},
+    ]
+
+    trimmed = trim_history(msgs, 5)
+    assert trimmed[-1]["role"] == "user"

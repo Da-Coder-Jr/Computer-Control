@@ -78,11 +78,9 @@ def blank_image() -> str:
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
-
 def trim_history(
     msgs: List[Dict[str, Any]], limit: int
 ) -> List[Dict[str, Any]]:  # noqa: E501
-
     """Return the most recent ``limit`` messages starting from a user or system
     message.
 
@@ -96,7 +94,10 @@ def trim_history(
     start = len(msgs) - limit
     while start > 0 and msgs[start]["role"] not in ("system", "user"):
         start -= 1
-    return msgs[start:]
+    trimmed = msgs[start:]
+    while trimmed and trimmed[-1].get("tool_calls"):
+        trimmed = trimmed[:-1]
+    return trimmed
 
 
 def main(
