@@ -18,7 +18,9 @@ POLLINATIONS_API = os.environ.get(
     "POLLINATIONS_API", "https://text.pollinations.ai/openai"
 )
 
-POLLINATIONS_REFERRER = os.environ.get("POLLINATIONS_REFERRER", "https://example.com")
+POLLINATIONS_REFERRER = os.environ.get(
+    "POLLINATIONS_REFERRER", "https://example.com"
+)  # noqa: E501
 
 
 SYSTEM_PROMPT = (
@@ -357,17 +359,28 @@ def query_pollinations(
             response = requests.post(
                 POLLINATIONS_API, json=payload, headers=headers, timeout=30
             )
-        except requests.RequestException as exc:  # network issues
+        except requests.RequestException as exc:  # network issues  # noqa: E501
             if attempt == retries:
-                raise RuntimeError("Failed to contact Pollinations API") from exc
+                raise RuntimeError(
+                    "Failed to contact Pollinations API"
+                ) from exc  # noqa: E501
             time.sleep(delay)
             delay *= 2
             continue
 
         if not response.ok:  # HTTP error
             if attempt == retries:
+                try:
+                    err = response.json()
+                except Exception:  # pragma: no cover - non-JSON error
+                    err = {}
+                details = err.get("details", {}).get("error", {})
+                if details.get("code") == "content_filter":  # noqa: E501
+                    raise RuntimeError(
+                        "Pollinations blocked the prompt due to content filtering."  # noqa: E501
+                    ) from None
                 raise RuntimeError(
-                    f"Pollinations API returned {response.status_code}: {response.text}"
+                    f"Pollinations API returned {response.status_code}: {response.text}"  # noqa: E501
                 )
             time.sleep(delay)
             delay *= 2
