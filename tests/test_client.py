@@ -339,7 +339,10 @@ def test_main_unlimited(monkeypatch):
                         "tool_calls": [
                             {
                                 "id": "1",
-                                "function": {"name": "run_shell", "arguments": "{}"},
+                                "function": {
+                                    "name": "run_shell",
+                                    "arguments": "{}",
+                                },  # noqa: E501
                             }
                         ]
                     }
@@ -359,7 +362,9 @@ def test_main_unlimited(monkeypatch):
     monkeypatch.setattr(
         client,
         "execute_tool_calls",
-        lambda *_, **__: [{"role": "tool", "tool_call_id": "1", "content": "ok"}],
+        lambda *_, **__: [
+            {"role": "tool", "tool_call_id": "1", "content": "ok"}
+        ],  # noqa: E501
     )
     monkeypatch.setattr(
         controller, "capture_screen", lambda: "data:image/png;base64,abc"

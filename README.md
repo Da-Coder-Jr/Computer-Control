@@ -30,7 +30,7 @@ available.
    ```
 
 2. Run a goal in automatic mode (the script keeps looping until the AI
-   signals it is done or reaches 15 steps):
+   signals it is done):
 
    ```bash
    python computer_control.py "open calculator"
@@ -59,9 +59,9 @@ Run the script **from the repository root** with a goal:
 python computer_control.py "open calculator"
 ```
 
-The program automatically loops until the AI reports it is done (up to a
-maximum of 15 steps by default). Use `--max-steps` to override that limit or
-`--steps N` to force an exact number of iterations. The `--history` flag
+The program automatically loops until the AI reports it is done. Use
+`--max-steps` to cap the number of iterations or `--steps N` to force an
+exact count. The `--history` flag
 controls how many of the most recent messages are sent to the API each loop,
 which helps avoid HTTP 413 errors from oversized requests.
 
