@@ -435,7 +435,11 @@ def execute_tool_calls(
         except json.JSONDecodeError:
             print(f"Invalid arguments for {name}: {args}")
             results.append(
-                {"role": "tool", "tool_call_id": call_id, "content": "error: bad args"}
+                {
+                    "role": "tool",
+                    "tool_call_id": call_id,
+                    "content": "error: bad args",
+                }
             )
             continue
 

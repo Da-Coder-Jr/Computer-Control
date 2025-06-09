@@ -8,7 +8,10 @@ import os
 import subprocess
 import sys
 import shutil
+import tempfile
 from typing import List, Dict, Sequence
+
+from PIL import Image, ImageGrab
 
 
 try:
@@ -143,13 +146,34 @@ def hotkey(keys: Sequence[str]) -> None:
     pyautogui.hotkey(*keys)
 
 
+def _fallback_screenshot() -> Image | None:
+    """Attempt a screenshot using platform utilities."""
+    if sys.platform == "darwin":
+        try:
+            tmp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+            tmp.close()
+            subprocess.run(["screencapture", "-x", tmp.name], check=True)
+            image = Image.open(tmp.name)
+            os.remove(tmp.name)
+            return image
+        except Exception:
+            return None
+    try:
+        return ImageGrab.grab()
+    except Exception:
+        return None
+
+
 def capture_screen() -> str:
     ensure_gui_available()
 
     try:
         image = pyautogui.screenshot()
-    except Exception as exc:  # pragma: no cover - GUI may be unavailable
-        raise GUIUnavailable(f"Failed to capture screen: {exc}") from exc
+    except Exception:
+        image = _fallback_screenshot()
+        if image is None:
+            msg = "Failed to capture screen: screenshot unavailable"
+            raise GUIUnavailable(msg)
 
     try:
         max_dim = max(image.size)
