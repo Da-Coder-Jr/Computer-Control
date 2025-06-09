@@ -366,3 +366,24 @@ def test_main_unlimited(monkeypatch):
     )
     computer_control.main("hi", max_steps=0, dry_run=True)
     assert idx["i"] == 2
+
+
+def test_trim_history_avoids_partial_pairs():
+    from computer_control import trim_history  # noqa: E402
+
+    # Build a message sequence with two tool call loops
+    msgs = [
+        {"role": "system", "content": "hi"},
+        {"role": "user", "content": "goal"},
+        {"role": "assistant", "tool_calls": [{"id": "1"}]},
+        {"role": "tool", "tool_call_id": "1", "content": "ok"},
+        {"role": "user", "content": "s1"},
+        {"role": "assistant", "tool_calls": [{"id": "2"}]},
+        {"role": "tool", "tool_call_id": "2", "content": "ok"},
+        {"role": "user", "content": "s2"},
+    ]
+
+    trimmed = trim_history(msgs, 3)
+    assert trimmed[0]["role"] == "user"
+    assert trimmed[1]["role"] == "assistant"
+    assert trimmed[2]["role"] == "tool"
