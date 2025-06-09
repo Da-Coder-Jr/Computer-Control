@@ -18,7 +18,9 @@ POLLINATIONS_API = os.environ.get(
     "POLLINATIONS_API", "https://text.pollinations.ai/openai"
 )
 
-POLLINATIONS_REFERRER = os.environ.get("POLLINATIONS_REFERRER", "https://example.com")
+POLLINATIONS_REFERRER = os.environ.get(
+    "POLLINATIONS_REFERRER", "https://example.com"
+)  # noqa: E501
 
 
 SYSTEM_PROMPT = (
@@ -357,17 +359,28 @@ def query_pollinations(
             response = requests.post(
                 POLLINATIONS_API, json=payload, headers=headers, timeout=30
             )
-        except requests.RequestException as exc:  # network issues
+        except requests.RequestException as exc:  # network issues  # noqa: E501
             if attempt == retries:
-                raise RuntimeError("Failed to contact Pollinations API") from exc
+                raise RuntimeError(
+                    "Failed to contact Pollinations API"
+                ) from exc  # noqa: E501
             time.sleep(delay)
             delay *= 2
             continue
 
         if not response.ok:  # HTTP error
             if attempt == retries:
+                try:
+                    err = response.json()
+                except Exception:  # pragma: no cover - non-JSON error
+                    err = {}
+                details = err.get("details", {}).get("error", {})
+                if details.get("code") == "content_filter":  # noqa: E501
+                    raise RuntimeError(
+                        "Pollinations blocked the prompt due to content filtering."  # noqa: E501
+                    ) from None
                 raise RuntimeError(
-                    f"Pollinations API returned {response.status_code}: {response.text}"
+                    f"Pollinations API returned {response.status_code}: {response.text}"  # noqa: E501
                 )
             time.sleep(delay)
             delay *= 2
@@ -390,18 +403,42 @@ def execute_tool_calls(
     results: List[Dict[str, Any]] = []
 
     for call in tool_calls:
+        call_id = call.get("id", "")
         name = call.get("function", {}).get("name")
+        args = call.get("function", {}).get("arguments", "{}")
+
         if not name:
+            print(f"Unknown tool call without name: {call}")
+            results.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": call_id,
+                    "content": "error: missing name",
+                }
+            )
             continue
+
         func = ACTION_MAP.get(name)
         if not func:
+            print(f"Unknown tool {name}")
+            results.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": call_id,
+                    "content": "error: unknown tool",
+                }
+            )
             continue
-        args = call.get("function", {}).get("arguments", "{}")
+
         try:
             params = json.loads(args) if args else {}
         except json.JSONDecodeError:
             print(f"Invalid arguments for {name}: {args}")
+            results.append(
+                {"role": "tool", "tool_call_id": call_id, "content": "error: bad args"}
+            )
             continue
+
         print(f"{name}({params})")
         if secure:
             resp = input(f"Execute {name}? [y/N] ")
@@ -410,28 +447,30 @@ def execute_tool_calls(
                 results.append(
                     {
                         "role": "tool",
-                        "tool_call_id": call.get("id", ""),
+                        "tool_call_id": call_id,
                         "content": "skipped",
                     }
                 )
                 continue
+
         if dry_run:
             print(f"[DRY-RUN] {name}({params})")
             results.append(
                 {
                     "role": "tool",
-                    "tool_call_id": call.get("id", ""),
+                    "tool_call_id": call_id,
                     "content": "dry-run",
                 }
             )
             continue
+
         try:
             result = func(**params)
             print(f"Executed {name}")
             results.append(
                 {
                     "role": "tool",
-                    "tool_call_id": call.get("id", ""),
+                    "tool_call_id": call_id,
                     "content": "" if result is None else str(result),
                 }
             )
@@ -440,7 +479,7 @@ def execute_tool_calls(
             results.append(
                 {
                     "role": "tool",
-                    "tool_call_id": call.get("id", ""),
+                    "tool_call_id": call_id,
                     "content": f"error: {exc}",
                 }
             )

@@ -78,6 +78,25 @@ def blank_image() -> str:
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
+def trim_history(
+    msgs: List[Dict[str, Any]], limit: int
+) -> List[Dict[str, Any]]:  # noqa: E501
+    """Return the most recent ``limit`` messages starting from a user or system
+    message.
+
+    This avoids sending an assistant message with ``tool_calls`` without the
+    accompanying tool responses which can trigger API errors.
+    """
+
+    if len(msgs) <= limit:
+        return msgs
+
+    start = len(msgs) - limit
+    while start > 0 and msgs[start]["role"] not in ("system", "user"):
+        start -= 1
+    return msgs[start:]
+
+
 def main(
     goal: str,
     steps: Optional[int] = None,
@@ -88,9 +107,9 @@ def main(
 ) -> None:
     """Send ``goal`` to Pollinations and execute returned actions.
 
-    ``history`` controls how many of the most recent messages are sent to
-    the API each loop.  Limiting the history prevents request payloads from
-    growing too large and triggering HTTP 413 errors.
+    ``history`` controls how many of the most recent messages are sent
+    to the API each loop. Limiting the history prevents request payloads
+    from growing too large and triggering HTTP 413 errors.
     """
     ui = PopupUI(steps)
     print("AI is taking control. Do not touch your computer.")
@@ -117,8 +136,13 @@ def main(
     loop_limit = steps if steps is not None else max_steps
     unlimited = steps is None and loop_limit <= 0
     i = 0
+
     while True:
-        data = client.query_pollinations(messages[-history:])
+        try:
+            data = client.query_pollinations(trim_history(messages, history))
+        except RuntimeError as exc:
+            print(f"Error: {exc}")
+            break
         choice = data.get("choices", [{}])[0]
         message = choice.get("message", {})
         tool_calls = message.get("tool_calls")
