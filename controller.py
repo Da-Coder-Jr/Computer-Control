@@ -10,8 +10,8 @@ import sys
 import shutil
 import tempfile
 from typing import List, Dict, Sequence
+from PIL import Image, ImageGrab, UnidentifiedImageError
 
-from PIL import Image, ImageGrab
 
 
 try:
@@ -149,15 +149,20 @@ def hotkey(keys: Sequence[str]) -> None:
 def _fallback_screenshot() -> Image | None:
     """Attempt a screenshot using platform utilities."""
     if sys.platform == "darwin":
+
+        tmp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
         try:
-            tmp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
             tmp.close()
             subprocess.run(["screencapture", "-x", tmp.name], check=True)
-            image = Image.open(tmp.name)
-            os.remove(tmp.name)
-            return image
+            with Image.open(tmp.name) as im:
+                image = im.copy()
         except Exception:
-            return None
+            image = None
+        finally:
+            os.remove(tmp.name)
+        if image is not None:
+            return image
+
     try:
         return ImageGrab.grab()
     except Exception:
@@ -169,11 +174,15 @@ def capture_screen() -> str:
 
     try:
         image = pyautogui.screenshot()
-    except Exception:
+
+    except Exception as exc:
         image = _fallback_screenshot()
         if image is None:
-            msg = "Failed to capture screen: screenshot unavailable"
-            raise GUIUnavailable(msg)
+            msg = "Failed to capture screen"
+            if isinstance(exc, UnidentifiedImageError):
+                msg += ": cannot identify image file"
+            raise GUIUnavailable(msg) from exc
+
 
     try:
         max_dim = max(image.size)
