@@ -196,3 +196,12 @@ def capture_screen() -> str:
 
     data = base64.b64encode(buf.getvalue()).decode()
     return f"data:image/jpeg;base64,{data}"
+
+
+def save_image(data_url: str, path: str) -> None:
+    """Save a base64 ``data_url`` to ``path``."""
+    if not data_url.startswith("data:image"):
+        raise ValueError("invalid data url")
+    _, b64 = data_url.split(",", 1)
+    with open(path, "wb") as f:
+        f.write(base64.b64decode(b64))

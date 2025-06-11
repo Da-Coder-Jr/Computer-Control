@@ -7,6 +7,7 @@ from .analysis import (
     summarize_codebase,
 )
 from .main import main, trim_history
+from .controller import save_image
 
 __all__ = [
     "client",
@@ -17,4 +18,6 @@ __all__ = [
     "summarize_codebase",
     "main",
     "trim_history",
+    "save_image",
+  
 ]

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 import argparse
+import os
 from typing import List, Dict, Any, Optional
 import base64
 import io
@@ -127,6 +128,8 @@ def main(
     dry_run: bool = False,
     secure: bool = False,
     history: int = 8,
+    save_dir: Optional[str] = None,
+
 ) -> None:
     """Send ``goal`` to Pollinations and execute returned actions.
 
@@ -137,6 +140,10 @@ def main(
 
     """
     ui = PopupUI(steps)
+    counter = 0
+    if save_dir:
+        os.makedirs(save_dir, exist_ok=True)
+        
     print("AI is taking control. Do not touch your computer.")
     messages: List[Dict[str, Any]] = [
         {"role": "system", "content": client.SYSTEM_PROMPT}
@@ -147,6 +154,10 @@ def main(
     except controller.GUIUnavailable as exc:
         print(f"Warning: {exc}; using blank screenshot")
         screenshot = blank_image()
+    if save_dir:
+        path = os.path.join(save_dir, f"{counter}.jpg")
+        controller.save_image(screenshot, path)
+        counter += 1
 
     messages.append(
         {
@@ -196,6 +207,11 @@ def main(
         except controller.GUIUnavailable as exc:
             print(f"Warning: {exc}; using blank screenshot")
             screenshot = blank_image()
+
+        if save_dir:
+            path = os.path.join(save_dir, f"{counter}.jpg")
+            controller.save_image(screenshot, path)
+            counter += 1
         messages.append(
             {
                 "role": "user",
@@ -211,6 +227,15 @@ def main(
         i += 1
         if not unlimited and i >= loop_limit:
             break
+
+    if save_dir:
+        try:
+            final_img = controller.capture_screen()
+            path = os.path.join(save_dir, "final.jpg")
+            controller.save_image(final_img, path)
+        except controller.GUIUnavailable:
+            pass
+
     ui.done()
 
 

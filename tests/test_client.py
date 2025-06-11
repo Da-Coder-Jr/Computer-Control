@@ -449,3 +449,23 @@ def test_trim_history_removes_incomplete_pairs():
     trimmed = trim_history(msgs, 4)
     assert all(m.get("tool_call_id") != "1" for m in trimmed)
     assert not any("tool_calls" in m for m in trimmed)
+
+
+def test_main_save_dir(monkeypatch, tmp_path):
+    from computer_control import main as cc_main
+    from computer_control import controller, client
+    import base64
+
+    def fake_capture():
+        return "data:image/jpeg;base64," + base64.b64encode(b"abc").decode()
+
+    def fake_query(_):
+        return {"choices": [{"message": {"content": "done", "done": True}}]}
+
+    monkeypatch.setattr(controller, "capture_screen", fake_capture)
+    monkeypatch.setattr(client, "execute_tool_calls", lambda *_, **__: [])
+    monkeypatch.setattr(client, "query_pollinations", fake_query)
+
+    cc_main("goal", steps=1, dry_run=True, save_dir=str(tmp_path))
+    assert (tmp_path / "0.jpg").exists()
+    assert (tmp_path / "final.jpg").exists()
