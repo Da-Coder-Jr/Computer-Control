@@ -383,6 +383,7 @@ def test_execute_tool_calls_returns_messages():
     msgs = client.execute_tool_calls([call], dry_run=True)
     assert msgs[0]["role"] == "tool"
     assert msgs[0]["tool_call_id"] == "abc"
+    assert msgs[0]["name"] == "run_shell"
 
 
 def test_main_unlimited(monkeypatch):
@@ -496,7 +497,6 @@ def test_trim_history_strips_leading_tool_messages():
 
     trimmed = trim_history(msgs, 4)
     assert trimmed == [{"role": "user", "content": "screen"}]
-
 
 
 def test_main_save_dir(monkeypatch, tmp_path):
