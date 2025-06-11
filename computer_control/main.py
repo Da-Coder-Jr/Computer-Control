@@ -79,25 +79,24 @@ def blank_image() -> str:
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
-def trim_history(
-    msgs: List[Dict[str, Any]], limit: int
-) -> List[Dict[str, Any]]:  # noqa: E501
-    """Return the most recent ``limit`` messages starting from a user or system
+def trim_history(msgs: List[Dict[str, Any]], limit: int) -> List[Dict[str, Any]]:
+    """Return at most ``limit`` recent messages starting from a user or system
     message.
 
-    This avoids sending an assistant message with ``tool_calls`` without the
-    accompanying tool responses which can trigger API errors.
+    The helper ensures no assistant message with ``tool_calls`` is included
+    without the corresponding tool responses which would otherwise trigger API
+    errors.
     """
 
-    if len(msgs) <= limit:
+    if limit <= 0:
+        return []
 
-        trimmed = msgs[:]
-    else:
-        start = len(msgs) - limit
-        while start > 0 and msgs[start]["role"] not in ("system", "user"):
-            start -= 1
-        trimmed = msgs[start:]
+    start = max(0, len(msgs) - limit)
+    while start < len(msgs) and msgs[start]["role"] not in ("system", "user"):
+        start += 1
+    trimmed = msgs[start:]
 
+    # drop trailing assistant messages that contain tool_calls
     while trimmed and trimmed[-1].get("tool_calls"):
         trimmed.pop()
 
@@ -105,22 +104,28 @@ def trim_history(
     while trimmed and trimmed[0]["role"] == "tool":
         trimmed.pop(0)
 
-    # ensure no assistant message with tool_calls is missing responses
+    # remove any assistant message whose tool_calls have missing responses
     while True:
         pending: List[str] = []
         first_incomplete = None
-        for i, m in enumerate(trimmed):
-            if m.get("tool_calls"):
-                pending.extend(call.get("id", "") for call in m["tool_calls"])
+        for i, msg in enumerate(trimmed):
+            if msg.get("tool_calls"):
+                pending.extend(call.get("id", "") for call in msg["tool_calls"])
                 if first_incomplete is None:
                     first_incomplete = i
-            elif m.get("tool_call_id") and m["tool_call_id"] in pending:
-                pending.remove(m["tool_call_id"])
+            elif msg.get("tool_call_id") and msg["tool_call_id"] in pending:
+                pending.remove(msg["tool_call_id"])
 
         if not pending:
             break
-        start_idx = first_incomplete + 1
-        trimmed = trimmed[start_idx:]
+
+        trimmed = trimmed[first_incomplete + 1 :]
+        while trimmed and trimmed[0]["role"] == "tool":
+            trimmed.pop(0)
+
+    # enforce the limit strictly
+    if len(trimmed) > limit:
+        trimmed = trimmed[-limit:]
         while trimmed and trimmed[0]["role"] == "tool":
             trimmed.pop(0)
 
