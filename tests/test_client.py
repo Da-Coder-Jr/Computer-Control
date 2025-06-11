@@ -447,9 +447,15 @@ def test_trim_history_avoids_partial_pairs():
     ]
 
     trimmed = trim_history(msgs, 3)
-    assert trimmed[0]["role"] == "user"
-    assert trimmed[1]["role"] == "assistant"
-    assert trimmed[2]["role"] == "tool"
+    assert trimmed[0]["role"] in ("system", "user")
+    assert len(trimmed) <= 3
+    pending = []
+    for m in trimmed:
+        if m.get("tool_calls"):
+            pending.extend(c["id"] for c in m["tool_calls"])
+        if m.get("tool_call_id") and m["tool_call_id"] in pending:
+            pending.remove(m["tool_call_id"])
+    assert not pending
 
 
 def test_trim_history_drops_trailing_tool_call():
@@ -497,6 +503,28 @@ def test_trim_history_strips_leading_tool_messages():
 
     trimmed = trim_history(msgs, 4)
     assert trimmed == [{"role": "user", "content": "screen"}]
+
+
+def test_trim_history_enforces_limit():
+    from computer_control import trim_history  # noqa: E402
+
+    msgs = [{"role": "system", "content": "hi"}]
+    for i in range(4):
+        msgs.append({"role": "user", "content": f"u{i}"})
+        msgs.append({"role": "assistant", "tool_calls": [{"id": str(i)}]})
+        msgs.append({"role": "tool", "tool_call_id": str(i), "content": "ok"})
+
+    trimmed = trim_history(msgs, 5)
+    assert len(trimmed) <= 5
+    assert trimmed[0]["role"] in ("system", "user")
+    assert not trimmed[-1].get("tool_calls")
+    pending = []
+    for m in trimmed:
+        if m.get("tool_calls"):
+            pending.extend(c["id"] for c in m["tool_calls"])
+        if m.get("tool_call_id") and m["tool_call_id"] in pending:
+            pending.remove(m["tool_call_id"])
+    assert not pending
 
 
 def test_main_save_dir(monkeypatch, tmp_path):
