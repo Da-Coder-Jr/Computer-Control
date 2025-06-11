@@ -76,6 +76,18 @@ def test_execute_tool_calls_dry_run(capsys):
                 "arguments": json.dumps({"src": "a.txt", "dst": "b.txt"}),
             },
         },
+        {
+            "function": {
+                "name": "move_file",
+                "arguments": json.dumps({"src": "a.txt", "dst": "c.txt"}),
+            },
+        },
+        {
+            "function": {
+                "name": "open_url",
+                "arguments": json.dumps({"url": "https://example.com"}),
+            },
+        },
     ]
     client.execute_tool_calls(calls, dry_run=True, secure=False)
 
@@ -325,6 +337,26 @@ def test_copy_and_delete_file(tmp_path):
     assert not src.exists()
 
 
+def test_move_file(tmp_path):
+    src = tmp_path / "a.txt"
+    dst = tmp_path / "c.txt"
+    src.write_text("hi")
+    controller.move_file(str(src), str(dst))
+    assert dst.read_text() == "hi"
+    assert not src.exists()
+
+
+def test_open_url(monkeypatch):
+    called = {}
+
+    def fake_open(url):
+        called["url"] = url
+
+    monkeypatch.setattr(controller.webbrowser, "open", fake_open)
+    controller.open_url("https://example.com")
+    assert called["url"] == "https://example.com"
+
+
 def test_analysis_functions():
     files = client.ACTION_MAP["list_python_files"]()
     assert "computer_control/main.py" in files
@@ -464,6 +496,7 @@ def test_trim_history_strips_leading_tool_messages():
 
     trimmed = trim_history(msgs, 4)
     assert trimmed == [{"role": "user", "content": "screen"}]
+
 
 
 def test_main_save_dir(monkeypatch, tmp_path):

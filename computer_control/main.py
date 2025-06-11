@@ -90,6 +90,7 @@ def trim_history(
     """
 
     if len(msgs) <= limit:
+
         trimmed = msgs[:]
     else:
         start = len(msgs) - limit
@@ -104,6 +105,7 @@ def trim_history(
     while trimmed and trimmed[0]["role"] == "tool":
         trimmed.pop(0)
 
+
     # ensure no assistant message with tool_calls is missing responses
     while True:
         pending: List[str] = []
@@ -115,12 +117,14 @@ def trim_history(
                     first_incomplete = i
             elif m.get("tool_call_id") and m["tool_call_id"] in pending:
                 pending.remove(m["tool_call_id"])
+
         if not pending:
             break
         start_idx = first_incomplete + 1
         trimmed = trimmed[start_idx:]
         while trimmed and trimmed[0]["role"] == "tool":
             trimmed.pop(0)
+
 
     return trimmed
 

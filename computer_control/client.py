@@ -221,6 +221,7 @@ FUNCTIONS_SPEC: List[Dict[str, Any]] = [
     {
         "type": "function",
         "function": {
+          
             "name": "delete_file",
             "description": "Delete a file",
             "parameters": {
