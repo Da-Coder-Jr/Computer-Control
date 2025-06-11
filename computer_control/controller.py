@@ -13,7 +13,6 @@ from typing import List, Dict, Sequence
 from PIL import Image, ImageGrab, UnidentifiedImageError
 
 
-
 try:
     import pyautogui  # type: ignore
 except Exception:  # pragma: no cover - handled gracefully
@@ -183,7 +182,6 @@ def capture_screen() -> str:
                 msg += ": cannot identify image file"
             raise GUIUnavailable(msg) from exc
 
-
     try:
         max_dim = max(image.size)
         if max_dim > 800:
@@ -198,3 +196,12 @@ def capture_screen() -> str:
 
     data = base64.b64encode(buf.getvalue()).decode()
     return f"data:image/jpeg;base64,{data}"
+
+
+def save_image(data_url: str, path: str) -> None:
+    """Save a base64 ``data_url`` to ``path``."""
+    if not data_url.startswith("data:image"):
+        raise ValueError("invalid data url")
+    _, b64 = data_url.split(",", 1)
+    with open(path, "wb") as f:
+        f.write(base64.b64decode(b64))

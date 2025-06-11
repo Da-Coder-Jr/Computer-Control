@@ -6,7 +6,7 @@ import os
 import ast
 from typing import List, Dict, Any
 
-REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def list_python_files() -> List[str]:
