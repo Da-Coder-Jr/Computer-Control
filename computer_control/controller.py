@@ -9,6 +9,7 @@ import subprocess
 import sys
 import shutil
 import tempfile
+import webbrowser
 from typing import List, Dict, Sequence
 from PIL import Image, ImageGrab, UnidentifiedImageError
 
@@ -118,6 +119,15 @@ def copy_file(src: str, dst: str) -> None:
     """Copy a file from ``src`` to ``dst``."""
     shutil.copy(src, dst)
 
+
+def move_file(src: str, dst: str) -> None:
+    """Move a file from ``src`` to ``dst``."""
+    shutil.move(src, dst)
+
+
+def open_url(url: str) -> None:
+    """Open ``url`` in the default web browser."""
+    webbrowser.open(url)
 
 
 def delete_file(path: str) -> None:

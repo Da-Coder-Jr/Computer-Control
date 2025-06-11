@@ -221,7 +221,6 @@ FUNCTIONS_SPEC: List[Dict[str, Any]] = [
     {
         "type": "function",
         "function": {
-          
             "name": "delete_file",
             "description": "Delete a file",
             "parameters": {
@@ -414,6 +413,7 @@ def execute_tool_calls(
                 {
                     "role": "tool",
                     "tool_call_id": call_id,
+                    "name": name,
                     "content": "error: missing name",
                 }
             )
@@ -426,6 +426,7 @@ def execute_tool_calls(
                 {
                     "role": "tool",
                     "tool_call_id": call_id,
+                    "name": name,
                     "content": "error: unknown tool",
                 }
             )
@@ -439,6 +440,7 @@ def execute_tool_calls(
                 {
                     "role": "tool",
                     "tool_call_id": call_id,
+                    "name": name,
                     "content": "error: bad args",
                 }
             )
@@ -453,6 +455,7 @@ def execute_tool_calls(
                     {
                         "role": "tool",
                         "tool_call_id": call_id,
+                        "name": name,
                         "content": "skipped",
                     }
                 )
@@ -464,6 +467,7 @@ def execute_tool_calls(
                 {
                     "role": "tool",
                     "tool_call_id": call_id,
+                    "name": name,
                     "content": "dry-run",
                 }
             )
@@ -476,6 +480,7 @@ def execute_tool_calls(
                 {
                     "role": "tool",
                     "tool_call_id": call_id,
+                    "name": name,
                     "content": "" if result is None else str(result),
                 }
             )
@@ -485,6 +490,7 @@ def execute_tool_calls(
                 {
                     "role": "tool",
                     "tool_call_id": call_id,
+                    "name": name,
                     "content": f"error: {exc}",
                 }
             )
