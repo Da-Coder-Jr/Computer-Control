@@ -10,8 +10,8 @@ from typing import Any, Callable, Dict, List, Optional
 
 import requests
 
-import controller
-import analysis
+from . import controller
+from . import analysis
 
 
 POLLINATIONS_API = os.environ.get(

@@ -13,7 +13,6 @@ from typing import List, Dict, Sequence
 from PIL import Image, ImageGrab, UnidentifiedImageError
 
 
-
 try:
     import pyautogui  # type: ignore
 except Exception:  # pragma: no cover - handled gracefully
@@ -182,7 +181,6 @@ def capture_screen() -> str:
             if isinstance(exc, UnidentifiedImageError):
                 msg += ": cannot identify image file"
             raise GUIUnavailable(msg) from exc
-
 
     try:
         max_dim = max(image.size)

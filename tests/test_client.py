@@ -12,8 +12,8 @@ sys.path.insert(
 
 import pytest  # noqa: E402
 
-import pollinations_client as client  # noqa: E402
-import controller  # noqa: E402
+from computer_control import client  # noqa: E402
+from computer_control import controller  # noqa: E402
 
 
 def test_functions_spec_matches_action_map():
@@ -121,13 +121,13 @@ def test_open_app_failure(monkeypatch):
     monkeypatch.setattr("os.startfile", fake_startfile, raising=False)
     monkeypatch.setattr("shutil.which", fake_which)
     with pytest.raises(RuntimeError):
-        import controller
+        from computer_control import controller
 
         controller.open_app("missing_app")
 
 
 def test_open_app_linux(monkeypatch):
-    import controller
+    from computer_control import controller
 
     called = {}
 
@@ -155,7 +155,7 @@ def test_open_app_linux(monkeypatch):
 
 
 def test_capture_screen_error(monkeypatch):
-    import controller
+    from computer_control import controller
 
     def bad_screenshot():
         raise OSError("scrot missing")
@@ -171,7 +171,7 @@ def test_capture_screen_error(monkeypatch):
 
 
 def test_capture_screen_jpeg(monkeypatch):
-    import controller
+    from computer_control import controller
     from PIL import Image
 
     def good_screenshot():
@@ -188,7 +188,7 @@ def test_capture_screen_jpeg(monkeypatch):
 
 
 def test_capture_screen_fallback(monkeypatch):
-    import controller
+    from computer_control import controller
     from PIL import Image
 
     def bad_screenshot():
@@ -272,7 +272,7 @@ def test_query_pollinations_http_error(monkeypatch):
 
 
 def test_main_uses_blank_image(monkeypatch):
-    import computer_control
+    from computer_control import main as cc_main
 
     def fake_capture():
         raise controller.GUIUnavailable("no gui")
@@ -286,12 +286,12 @@ def test_main_uses_blank_image(monkeypatch):
     monkeypatch.setattr(controller, "capture_screen", fake_capture)
     monkeypatch.setattr(client, "execute_tool_calls", lambda *_, **__: None)
     monkeypatch.setattr(client, "query_pollinations", fake_query)
-    computer_control.main("hello", steps=1, dry_run=True)
+    cc_main("hello", steps=1, dry_run=True)
     assert payload.startswith("data:image/png;base64,")
 
 
 def test_main_uses_blank_image_no_dry_run(monkeypatch):
-    import computer_control
+    from computer_control import main as cc_main
 
     def fake_capture():
         raise controller.GUIUnavailable("no gui")
@@ -305,7 +305,7 @@ def test_main_uses_blank_image_no_dry_run(monkeypatch):
     monkeypatch.setattr(controller, "capture_screen", fake_capture)
     monkeypatch.setattr(client, "execute_tool_calls", lambda *_, **__: None)
     monkeypatch.setattr(client, "query_pollinations", fake_query)
-    computer_control.main("hello", steps=1)
+    cc_main("hello", steps=1)
     assert payload.startswith("data:image/png;base64,")
 
 
@@ -327,17 +327,17 @@ def test_copy_and_delete_file(tmp_path):
 
 def test_analysis_functions():
     files = client.ACTION_MAP["list_python_files"]()
-    assert "computer_control.py" in files
+    assert "computer_control/main.py" in files
 
     text = client.ACTION_MAP["read_file"]("README.md")
     assert "Computer-Control" in text
 
     matches = client.ACTION_MAP["search_code"]("def main")
-    assert any(m["file"].endswith("computer_control.py") for m in matches)
+    assert any(m["file"].endswith("computer_control/main.py") for m in matches)
 
     summary = client.ACTION_MAP["summarize_codebase"]()
-    assert "computer_control.py" in summary
-    assert "main" in summary["computer_control.py"]["functions"]
+    assert "computer_control/main.py" in summary
+    assert "main" in summary["computer_control/main.py"]["functions"]
 
 
 def test_execute_tool_calls_returns_messages():
@@ -354,7 +354,7 @@ def test_execute_tool_calls_returns_messages():
 
 
 def test_main_unlimited(monkeypatch):
-    import computer_control
+    from computer_control import main as cc_main
 
     responses = [
         {
@@ -394,7 +394,7 @@ def test_main_unlimited(monkeypatch):
     monkeypatch.setattr(
         controller, "capture_screen", lambda: "data:image/png;base64,abc"
     )
-    computer_control.main("hi", max_steps=0, dry_run=True)
+    cc_main("hi", max_steps=0, dry_run=True)
     assert idx["i"] == 2
 
 
@@ -433,3 +433,19 @@ def test_trim_history_drops_trailing_tool_call():
 
     trimmed = trim_history(msgs, 5)
     assert trimmed[-1]["role"] == "user"
+
+
+def test_trim_history_removes_incomplete_pairs():
+    from computer_control import trim_history  # noqa: E402
+
+    msgs = [
+        {"role": "system", "content": "hi"},
+        {"role": "user", "content": "goal"},
+        {"role": "assistant", "tool_calls": [{"id": "1"}, {"id": "2"}]},
+        {"role": "tool", "tool_call_id": "1", "content": "ok"},
+        {"role": "user", "content": "next"},
+    ]
+
+    trimmed = trim_history(msgs, 4)
+    assert all(m.get("tool_call_id") != "1" for m in trimmed)
+    assert not any("tool_calls" in m for m in trimmed)
