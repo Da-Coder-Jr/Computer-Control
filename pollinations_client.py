@@ -413,6 +413,7 @@ def execute_tool_calls(
                 {
                     "role": "tool",
                     "tool_call_id": call_id,
+                    "name": name or "",
                     "content": "error: missing name",
                 }
             )
@@ -425,6 +426,7 @@ def execute_tool_calls(
                 {
                     "role": "tool",
                     "tool_call_id": call_id,
+                    "name": name,
                     "content": "error: unknown tool",
                 }
             )
@@ -435,7 +437,12 @@ def execute_tool_calls(
         except json.JSONDecodeError:
             print(f"Invalid arguments for {name}: {args}")
             results.append(
-                {"role": "tool", "tool_call_id": call_id, "content": "error: bad args"}
+                {
+                    "role": "tool",
+                    "tool_call_id": call_id,
+                    "name": name,
+                    "content": "error: bad args",
+                }
             )
             continue
 
@@ -448,6 +455,7 @@ def execute_tool_calls(
                     {
                         "role": "tool",
                         "tool_call_id": call_id,
+                        "name": name,
                         "content": "skipped",
                     }
                 )
@@ -459,6 +467,7 @@ def execute_tool_calls(
                 {
                     "role": "tool",
                     "tool_call_id": call_id,
+                    "name": name,
                     "content": "dry-run",
                 }
             )
@@ -471,6 +480,7 @@ def execute_tool_calls(
                 {
                     "role": "tool",
                     "tool_call_id": call_id,
+                    "name": name,
                     "content": "" if result is None else str(result),
                 }
             )
@@ -480,6 +490,7 @@ def execute_tool_calls(
                 {
                     "role": "tool",
                     "tool_call_id": call_id,
+                    "name": name,
                     "content": f"error: {exc}",
                 }
             )

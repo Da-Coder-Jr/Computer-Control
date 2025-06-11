@@ -187,6 +187,31 @@ def test_capture_screen_jpeg(monkeypatch):
     assert url.startswith("data:image/jpeg;base64,")
 
 
+def test_capture_screen_fallback(monkeypatch):
+    import controller
+    from PIL import Image
+
+    def bad_screenshot():
+        raise OSError("fail")
+
+    def grab():
+        return Image.new("RGB", (5, 5), "blue")
+
+    monkeypatch.setattr(
+        controller,
+        "pyautogui",
+        type("Dummy", (), {"screenshot": staticmethod(bad_screenshot)}),
+    )
+    monkeypatch.setattr(
+        controller,
+        "ImageGrab",
+        type("Dummy", (), {"grab": staticmethod(grab)}),
+    )
+
+    url = controller.capture_screen()
+    assert url.startswith("data:image/jpeg;base64,")
+
+
 def test_query_pollinations_payload(monkeypatch):
     captured = {}
 
@@ -326,6 +351,7 @@ def test_execute_tool_calls_returns_messages():
     msgs = client.execute_tool_calls([call], dry_run=True)
     assert msgs[0]["role"] == "tool"
     assert msgs[0]["tool_call_id"] == "abc"
+    assert msgs[0]["name"] == "run_shell"
 
 
 def test_main_unlimited(monkeypatch):
@@ -392,3 +418,19 @@ def test_trim_history_avoids_partial_pairs():
     assert trimmed[0]["role"] == "user"
     assert trimmed[1]["role"] == "assistant"
     assert trimmed[2]["role"] == "tool"
+
+
+def test_trim_history_drops_trailing_tool_call():
+    from computer_control import trim_history  # noqa: E402
+
+    msgs = [
+        {"role": "system", "content": "hi"},
+        {"role": "user", "content": "goal"},
+        {"role": "assistant", "tool_calls": [{"id": "1"}]},
+        {"role": "tool", "tool_call_id": "1", "content": "ok"},
+        {"role": "user", "content": "s1"},
+        {"role": "assistant", "tool_calls": [{"id": "2"}]},
+    ]
+
+    trimmed = trim_history(msgs, 5)
+    assert trimmed[-1]["role"] == "user"

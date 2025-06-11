@@ -53,9 +53,12 @@ def summarize_codebase() -> Dict[str, Any]:
                 continue
         funcs = [
             n.name for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)
-        ]
+        ]  # noqa: E501
         classes = [
             n.name for n in ast.walk(tree) if isinstance(n, ast.ClassDef)
-        ]
-        summary[file] = {"functions": funcs, "classes": classes}
+        ]  # noqa: E501
+        summary[file] = {
+            "functions": funcs,
+            "classes": classes,
+        }
     return summary
