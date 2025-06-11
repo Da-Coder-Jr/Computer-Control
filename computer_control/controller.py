@@ -9,6 +9,7 @@ import subprocess
 import sys
 import shutil
 import tempfile
+import webbrowser
 from typing import List, Dict, Sequence
 from PIL import Image, ImageGrab, UnidentifiedImageError
 
@@ -119,6 +120,12 @@ def copy_file(src: str, dst: str) -> None:
     shutil.copy(src, dst)
 
 
+def move_file(src: str, dst: str) -> None:
+    """Move or rename a file."""
+    os.makedirs(os.path.dirname(os.path.abspath(dst)), exist_ok=True)
+    shutil.move(src, dst)
+
+
 def delete_file(path: str) -> None:
     """Delete a file if it exists."""
     try:
@@ -143,6 +150,11 @@ def hotkey(keys: Sequence[str]) -> None:
     """Press a combination of keys."""
     ensure_gui_available()
     pyautogui.hotkey(*keys)
+
+
+def open_url(url: str) -> None:
+    """Open a URL in the default web browser."""
+    webbrowser.open(url)
 
 
 def _fallback_screenshot() -> Image | None:

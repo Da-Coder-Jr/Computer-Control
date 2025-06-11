@@ -221,6 +221,21 @@ FUNCTIONS_SPEC: List[Dict[str, Any]] = [
     {
         "type": "function",
         "function": {
+            "name": "move_file",
+            "description": "Move or rename a file",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "src": {"type": "string"},
+                    "dst": {"type": "string"},
+                },
+                "required": ["src", "dst"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "delete_file",
             "description": "Delete a file",
             "parameters": {
@@ -269,6 +284,18 @@ FUNCTIONS_SPEC: List[Dict[str, Any]] = [
                     },
                 },
                 "required": ["keys"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "open_url",
+            "description": "Open a URL in the default browser",
+            "parameters": {
+                "type": "object",
+                "properties": {"url": {"type": "string"}},
+                "required": ["url"],
             },
         },
     },
@@ -327,10 +354,12 @@ ACTION_MAP: Dict[str, Callable[..., None]] = {
     "open_app": controller.open_app,
     "create_file": controller.create_file,
     "copy_file": controller.copy_file,
+    "move_file": controller.move_file,
     "delete_file": controller.delete_file,
     "key_down": controller.key_down,
     "key_up": controller.key_up,
     "hotkey": controller.hotkey,
+    "open_url": controller.open_url,
     "list_python_files": analysis.list_python_files,
     "read_file": analysis.read_file,
     "search_code": analysis.search_code,
