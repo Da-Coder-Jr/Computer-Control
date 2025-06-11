@@ -19,5 +19,4 @@ __all__ = [
     "main",
     "trim_history",
     "save_image",
-  
 ]

@@ -90,14 +90,21 @@ def trim_history(
     """
 
     if len(msgs) <= limit:
-        return msgs
 
-    start = len(msgs) - limit
-    while start > 0 and msgs[start]["role"] not in ("system", "user"):
-        start -= 1
-    trimmed = msgs[start:]
+        trimmed = msgs[:]
+    else:
+        start = len(msgs) - limit
+        while start > 0 and msgs[start]["role"] not in ("system", "user"):
+            start -= 1
+        trimmed = msgs[start:]
+
     while trimmed and trimmed[-1].get("tool_calls"):
-        trimmed = trimmed[:-1]
+        trimmed.pop()
+
+    # drop leading tool messages without a preceding assistant
+    while trimmed and trimmed[0]["role"] == "tool":
+        trimmed.pop(0)
+
 
     # ensure no assistant message with tool_calls is missing responses
     while True:
@@ -108,15 +115,16 @@ def trim_history(
                 pending.extend(call.get("id", "") for call in m["tool_calls"])
                 if first_incomplete is None:
                     first_incomplete = i
-            elif m.get("tool_call_id"):
-                if m["tool_call_id"] in pending:
-                    pending.remove(m["tool_call_id"])
+            elif m.get("tool_call_id") and m["tool_call_id"] in pending:
+                pending.remove(m["tool_call_id"])
+
         if not pending:
             break
         start_idx = first_incomplete + 1
         trimmed = trimmed[start_idx:]
         while trimmed and trimmed[0]["role"] == "tool":
-            trimmed = trimmed[1:]
+            trimmed.pop(0)
+
 
     return trimmed
 
@@ -129,7 +137,6 @@ def main(
     secure: bool = False,
     history: int = 8,
     save_dir: Optional[str] = None,
-
 ) -> None:
     """Send ``goal`` to Pollinations and execute returned actions.
 
@@ -143,7 +150,6 @@ def main(
     counter = 0
     if save_dir:
         os.makedirs(save_dir, exist_ok=True)
-        
     print("AI is taking control. Do not touch your computer.")
     messages: List[Dict[str, Any]] = [
         {"role": "system", "content": client.SYSTEM_PROMPT}
@@ -207,7 +213,6 @@ def main(
         except controller.GUIUnavailable as exc:
             print(f"Warning: {exc}; using blank screenshot")
             screenshot = blank_image()
-
         if save_dir:
             path = os.path.join(save_dir, f"{counter}.jpg")
             controller.save_image(screenshot, path)
@@ -227,7 +232,6 @@ def main(
         i += 1
         if not unlimited and i >= loop_limit:
             break
-
     if save_dir:
         try:
             final_img = controller.capture_screen()
@@ -235,7 +239,6 @@ def main(
             controller.save_image(final_img, path)
         except controller.GUIUnavailable:
             pass
-
     ui.done()
 
 

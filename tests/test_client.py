@@ -483,6 +483,22 @@ def test_trim_history_removes_incomplete_pairs():
     assert not any("tool_calls" in m for m in trimmed)
 
 
+def test_trim_history_strips_leading_tool_messages():
+    from computer_control import trim_history  # noqa: E402
+
+    msgs = [
+        {"role": "system", "content": "hi"},
+        {"role": "user", "content": "goal"},
+        {"role": "assistant", "tool_calls": [{"id": "1"}, {"id": "2"}]},
+        {"role": "tool", "tool_call_id": "1", "content": "ok"},
+        {"role": "user", "content": "screen"},
+    ]
+
+    trimmed = trim_history(msgs, 4)
+    assert trimmed == [{"role": "user", "content": "screen"}]
+
+
+
 def test_main_save_dir(monkeypatch, tmp_path):
     from computer_control import main as cc_main
     from computer_control import controller, client
