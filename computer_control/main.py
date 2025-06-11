@@ -129,6 +129,7 @@ def main(
     secure: bool = False,
     history: int = 8,
     save_dir: Optional[str] = None,
+
 ) -> None:
     """Send ``goal`` to Pollinations and execute returned actions.
 
@@ -142,6 +143,7 @@ def main(
     counter = 0
     if save_dir:
         os.makedirs(save_dir, exist_ok=True)
+        
     print("AI is taking control. Do not touch your computer.")
     messages: List[Dict[str, Any]] = [
         {"role": "system", "content": client.SYSTEM_PROMPT}
@@ -205,6 +207,7 @@ def main(
         except controller.GUIUnavailable as exc:
             print(f"Warning: {exc}; using blank screenshot")
             screenshot = blank_image()
+
         if save_dir:
             path = os.path.join(save_dir, f"{counter}.jpg")
             controller.save_image(screenshot, path)
@@ -224,6 +227,7 @@ def main(
         i += 1
         if not unlimited and i >= loop_limit:
             break
+
     if save_dir:
         try:
             final_img = controller.capture_screen()
@@ -231,6 +235,7 @@ def main(
             controller.save_image(final_img, path)
         except controller.GUIUnavailable:
             pass
+
     ui.done()
 
 
