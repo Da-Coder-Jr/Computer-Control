@@ -179,6 +179,14 @@ def _fallback_screenshot() -> Image | None:
         return None
 
 
+def _blank_data_url() -> str:
+    """Return a 1x1 white PNG data URL."""
+    buf = io.BytesIO()
+    Image.new("RGB", (1, 1), color="white").save(buf, format="PNG")
+    b64 = base64.b64encode(buf.getvalue()).decode()
+    return f"data:image/png;base64,{b64}"
+
+
 def capture_screen() -> str:
     ensure_gui_available()
 
@@ -188,9 +196,9 @@ def capture_screen() -> str:
     except Exception as exc:
         image = _fallback_screenshot()
         if image is None:
-            msg = "Failed to capture screen"
             if isinstance(exc, UnidentifiedImageError):
-                msg += ": cannot identify image file"
+                return _blank_data_url()
+            msg = "Failed to capture screen"
             raise GUIUnavailable(msg) from exc
 
     try:

@@ -224,6 +224,31 @@ def test_capture_screen_fallback(monkeypatch):
     assert url.startswith("data:image/jpeg;base64,")
 
 
+def test_capture_screen_unidentified(monkeypatch):
+    from computer_control import controller
+    from PIL import UnidentifiedImageError
+
+    def bad_screenshot():
+        raise UnidentifiedImageError("bad")
+
+    def grab():
+        raise OSError("fail")
+
+    monkeypatch.setattr(
+        controller,
+        "pyautogui",
+        type("Dummy", (), {"screenshot": staticmethod(bad_screenshot)}),
+    )
+    monkeypatch.setattr(
+        controller,
+        "ImageGrab",
+        type("Dummy", (), {"grab": staticmethod(grab)}),
+    )
+
+    url = controller.capture_screen()
+    assert url.startswith("data:image/png;base64,")
+
+
 def test_query_pollinations_payload(monkeypatch):
     captured = {}
 
