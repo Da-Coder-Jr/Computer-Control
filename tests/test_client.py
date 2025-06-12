@@ -527,6 +527,22 @@ def test_trim_history_enforces_limit():
     assert not pending
 
 
+def test_trim_history_keeps_complete_pairs(monkeypatch):
+    from computer_control import trim_history  # noqa: E402
+
+    msgs = [
+        {"role": "system", "content": "hi"},
+        {"role": "user", "content": "goal"},
+        {"role": "assistant", "tool_calls": [{"id": "1"}]},
+        {"role": "tool", "tool_call_id": "1", "content": "ok"},
+        {"role": "user", "content": "next"},
+        {"role": "assistant", "tool_calls": [{"id": "2"}]},
+    ]
+
+    trimmed = trim_history(msgs, 6)
+    assert trimmed == msgs[:5]
+
+
 def test_main_save_dir(monkeypatch, tmp_path):
     from computer_control import main as cc_main
     from computer_control import controller, client

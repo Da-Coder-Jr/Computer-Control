@@ -79,7 +79,10 @@ def blank_image() -> str:
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
-def trim_history(msgs: List[Dict[str, Any]], limit: int) -> List[Dict[str, Any]]:
+def trim_history(
+    msgs: List[Dict[str, Any]],
+    limit: int,
+) -> List[Dict[str, Any]]:
     """Return at most ``limit`` recent messages starting from a user or system
     message.
 
@@ -110,16 +113,21 @@ def trim_history(msgs: List[Dict[str, Any]], limit: int) -> List[Dict[str, Any]]
         first_incomplete = None
         for i, msg in enumerate(trimmed):
             if msg.get("tool_calls"):
-                pending.extend(call.get("id", "") for call in msg["tool_calls"])
+                ids = [call.get("id", "") for call in msg["tool_calls"]]
+                pending.extend(ids)
                 if first_incomplete is None:
                     first_incomplete = i
             elif msg.get("tool_call_id") and msg["tool_call_id"] in pending:
                 pending.remove(msg["tool_call_id"])
+                if not pending:
+                    first_incomplete = None
 
         if not pending:
             break
 
-        trimmed = trimmed[first_incomplete + 1 :]
+        # fmt: off
+        trimmed = trimmed[first_incomplete + 1:]
+        # fmt: on
         while trimmed and trimmed[0]["role"] == "tool":
             trimmed.pop(0)
 
