@@ -72,18 +72,6 @@ def test_execute_tool_calls_dry_run(capsys):
         },
         {
             "function": {
-                "name": "copy_file",
-                "arguments": json.dumps({"src": "a.txt", "dst": "b.txt"}),
-            },
-        },
-        {
-            "function": {
-                "name": "move_file",
-                "arguments": json.dumps({"src": "a.txt", "dst": "c.txt"}),
-            },
-        },
-        {
-            "function": {
                 "name": "open_url",
                 "arguments": json.dumps({"url": "https://example.com"}),
             },
@@ -382,19 +370,11 @@ def test_open_url(monkeypatch):
     assert called["url"] == "https://example.com"
 
 
-def test_analysis_functions():
-    files = client.ACTION_MAP["list_python_files"]()
-    assert "computer_control/main.py" in files
-
-    text = client.ACTION_MAP["read_file"]("README.md")
-    assert "Computer-Control" in text
-
-    matches = client.ACTION_MAP["search_code"]("def main")
-    assert any(m["file"].endswith("computer_control/main.py") for m in matches)
-
-    summary = client.ACTION_MAP["summarize_codebase"]()
-    assert "computer_control/main.py" in summary
-    assert "main" in summary["computer_control/main.py"]["functions"]
+def test_analysis_functions_removed():
+    assert "read_file" not in client.ACTION_MAP
+    assert "list_python_files" not in client.ACTION_MAP
+    assert "search_code" not in client.ACTION_MAP
+    assert "summarize_codebase" not in client.ACTION_MAP
 
 
 def test_execute_tool_calls_returns_messages():
@@ -586,3 +566,40 @@ def test_main_save_dir(monkeypatch, tmp_path):
     cc_main("goal", steps=1, dry_run=True, save_dir=str(tmp_path))
     assert (tmp_path / "0.jpg").exists()
     assert (tmp_path / "final.jpg").exists()
+
+
+def test_query_pollinations_413(monkeypatch):
+    class Resp:
+        status_code = 413
+        ok = False
+        text = "too big"
+
+    def fake_post(*_, **__):
+        return Resp()
+
+    monkeypatch.setattr(client.requests, "post", fake_post)
+    with pytest.raises(RuntimeError):
+        client.query_pollinations([{"role": "user", "content": "hi"}])
+
+
+def test_main_retries_on_413(monkeypatch):
+    from computer_control import main as cc_main
+
+    calls = {"count": 0}
+
+    def fake_query(_):
+        calls["count"] += 1
+        if calls["count"] == 1:
+            raise RuntimeError(
+                "Pollinations API returned 413: request entity too large"
+            )
+        return {"choices": [{"message": {"done": True}}]}
+
+    monkeypatch.setattr(client, "query_pollinations", fake_query)
+    monkeypatch.setattr(client, "execute_tool_calls", lambda *_, **__: [])
+    monkeypatch.setattr(
+        controller, "capture_screen", lambda: "data:image/png;base64,abc"
+    )
+
+    cc_main("goal", steps=1, dry_run=True, history=4)
+    assert calls["count"] == 2
