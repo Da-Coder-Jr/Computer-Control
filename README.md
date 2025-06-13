@@ -37,7 +37,7 @@ available.
    ```
 
    Add `--dry-run` to preview the tool calls without actually executing
-   them. Use `--secure` to confirm each step before it executes.
+   them. The program asks for confirmation before each action.
 
 3. Run the automated tests (optional):
 
@@ -69,9 +69,9 @@ which helps avoid HTTP 413 errors from oversized requests.
 `computer_control.py` lives in the project root, so run it there or provide the
 full path if invoking from another directory.
 
-The AI may request functions like `open_app` to launch applications. These tool
-calls are executed automatically unless `--dry-run` is used. Use `--secure` to
-confirm each action before it runs.
+The AI may request functions like `open_app` to launch applications. These
+tool calls are executed automatically unless `--dry-run` is used.
+Confirmation prompts are always enabled to ensure safety.
 
 
 Add `--dry-run` to print actions instead of executing them. Pollinations will
@@ -84,12 +84,8 @@ blank image so execution can continue.
 Supported actions include launching apps, running shell commands, moving and
 clicking the mouse (including double-clicks and drags), scrolling, drawing with
 the mouse, typing text, pressing keys, holding or releasing keys, pressing
-hotkeys, copying and deleting files, and creating new files.
-
-The AI can also inspect the repository itself. Functions allow it to list
-Python files, read their contents, search for text, and produce a summary of
-functions and classes. This context-aware access lets the model navigate the
-codebase and provide suggestions.
+hotkeys, deleting files, and creating new files. The AI cannot read
+repository files.
 
 
 During execution a small popup window displays a progress bar and the current

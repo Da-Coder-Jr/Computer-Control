@@ -11,7 +11,6 @@ from typing import Any, Callable, Dict, List, Optional
 import requests
 
 from . import controller
-from . import analysis
 
 
 POLLINATIONS_API = os.environ.get(
@@ -191,6 +190,18 @@ FUNCTIONS_SPEC: List[Dict[str, Any]] = [
     {
         "type": "function",
         "function": {
+            "name": "open_url",
+            "description": "Open a URL in the default browser",
+            "parameters": {
+                "type": "object",
+                "properties": {"url": {"type": "string"}},
+                "required": ["url"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "create_file",
             "description": "Create a file with the given content",
             "parameters": {
@@ -200,21 +211,6 @@ FUNCTIONS_SPEC: List[Dict[str, Any]] = [
                     "content": {"type": "string"},
                 },
                 "required": ["path", "content"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "copy_file",
-            "description": "Copy a file to a new location",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "src": {"type": "string"},
-                    "dst": {"type": "string"},
-                },
-                "required": ["src", "dst"],
             },
         },
     },
@@ -272,46 +268,6 @@ FUNCTIONS_SPEC: List[Dict[str, Any]] = [
             },
         },
     },
-    {
-        "type": "function",
-        "function": {
-            "name": "list_python_files",
-            "description": "List all Python files in the repository",
-            "parameters": {"type": "object", "properties": {}, "required": []},
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "read_file",
-            "description": "Read the contents of a repository file",
-            "parameters": {
-                "type": "object",
-                "properties": {"path": {"type": "string"}},
-                "required": ["path"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "search_code",
-            "description": "Search the codebase for a string",
-            "parameters": {
-                "type": "object",
-                "properties": {"pattern": {"type": "string"}},
-                "required": ["pattern"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "summarize_codebase",
-            "description": "Summarize functions and classes in each file",
-            "parameters": {"type": "object", "properties": {}, "required": []},
-        },
-    },
 ]
 
 ACTION_MAP: Dict[str, Callable[..., None]] = {
@@ -325,16 +281,12 @@ ACTION_MAP: Dict[str, Callable[..., None]] = {
     "drag_mouse": controller.drag_mouse,
     "draw_path": controller.draw_path,
     "open_app": controller.open_app,
+    "open_url": controller.open_url,
     "create_file": controller.create_file,
-    "copy_file": controller.copy_file,
     "delete_file": controller.delete_file,
     "key_down": controller.key_down,
     "key_up": controller.key_up,
     "hotkey": controller.hotkey,
-    "list_python_files": analysis.list_python_files,
-    "read_file": analysis.read_file,
-    "search_code": analysis.search_code,
-    "summarize_codebase": analysis.summarize_codebase,
 }
 
 
@@ -369,6 +321,10 @@ def query_pollinations(
             continue
 
         if not response.ok:  # HTTP error
+            if response.status_code == 413:
+                raise RuntimeError(
+                    "Pollinations API returned 413: request entity too large"
+                )
             if attempt == retries:
                 try:
                     err = response.json()
