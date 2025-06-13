@@ -145,7 +145,7 @@ def main(
     steps: Optional[int] = None,
     max_steps: int = 0,
     dry_run: bool = False,
-    secure: bool = False,
+    secure: bool = True,
     history: int = 8,
     save_dir: Optional[str] = None,
 ) -> None:
@@ -195,6 +195,13 @@ def main(
         try:
             data = client.query_pollinations(trim_history(messages, history))
         except RuntimeError as exc:
+            if "413" in str(exc) and history > 1:
+                history = max(1, history // 2)
+                print(
+                    "Warning: payload too large;",
+                    f"retrying with history={history}",
+                )
+                continue
             print(f"Error: {exc}")
             break
 
@@ -280,11 +287,6 @@ def cli_entry() -> None:
         help="Print actions instead of executing",
     )
     parser.add_argument(
-        "--secure",
-        action="store_true",
-        help="Ask for confirmation before executing each tool call",
-    )
-    parser.add_argument(
         "--history",
         type=int,
         default=8,
@@ -297,7 +299,7 @@ def cli_entry() -> None:
         steps=steps,
         max_steps=args.max_steps,
         dry_run=args.dry_run,
-        secure=args.secure,
+        secure=True,
         history=args.history,
     )
 
