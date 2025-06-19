@@ -77,7 +77,7 @@ def test_execute_tool_calls_dry_run(capsys):
             },
         },
     ]
-    client.execute_tool_calls(calls, dry_run=True, secure=False)
+    client.execute_tool_calls(calls, dry_run=True, secure=False, delay=0)
 
     captured = capsys.readouterr()
     assert "DRY-RUN" in captured.out
@@ -93,9 +93,23 @@ def test_execute_tool_calls_secure(monkeypatch, capsys):
         }
     ]
     monkeypatch.setattr("builtins.input", lambda *_: "n")
-    client.execute_tool_calls(calls, dry_run=False, secure=True)
+    client.execute_tool_calls(calls, dry_run=False, secure=True, delay=0)
     captured = capsys.readouterr()
     assert "Skipped run_shell" in captured.out
+
+
+def test_execute_tool_calls_delay(monkeypatch):
+    call = {
+        "function": {
+            "name": "run_shell",
+            "arguments": json.dumps({"command": "echo hi"}),
+        }
+    }
+    sleeps: List[float] = []
+    monkeypatch.setattr(client.time, "sleep", lambda d: sleeps.append(d))
+    monkeypatch.setattr(client.controller, "run_shell", lambda **_: None)
+    client.execute_tool_calls([call], dry_run=False, secure=False, delay=0.5)
+    assert sleeps == [0.5]
 
 
 def test_help_runs(tmp_path):
@@ -385,7 +399,7 @@ def test_execute_tool_calls_returns_messages():
             "arguments": json.dumps({"command": "echo hi"}),
         },
     }
-    msgs = client.execute_tool_calls([call], dry_run=True)
+    msgs = client.execute_tool_calls([call], dry_run=True, delay=0)
     assert msgs[0]["role"] == "tool"
     assert msgs[0]["tool_call_id"] == "abc"
     assert msgs[0]["name"] == "run_shell"
