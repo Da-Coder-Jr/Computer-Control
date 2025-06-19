@@ -148,6 +148,7 @@ def main(
     secure: bool = True,
     history: int = 8,
     save_dir: Optional[str] = None,
+    delay: float = 0.0,
 ) -> None:
     """Send ``goal`` to Pollinations and execute returned actions.
 
@@ -210,7 +211,7 @@ def main(
         tool_calls = message.get("tool_calls")
         if tool_calls:
             tool_messages = client.execute_tool_calls(
-                tool_calls, dry_run=dry_run, secure=secure
+                tool_calls, dry_run=dry_run, secure=secure, delay=delay
             )  # noqa: E501
             ui.update(
                 i + 1, f"{tool_calls[0].get('function', {}).get('name')}"
@@ -292,6 +293,12 @@ def cli_entry() -> None:
         default=8,
         help="Number of recent messages to send to the API",
     )
+    parser.add_argument(
+        "--delay",
+        type=float,
+        default=0.0,
+        help="Seconds to wait after each action",
+    )
     args = parser.parse_args()
     steps = None if str(args.steps).lower() == "auto" else int(args.steps)
     main(
@@ -301,6 +308,7 @@ def cli_entry() -> None:
         dry_run=args.dry_run,
         secure=True,
         history=args.history,
+        delay=args.delay,
     )
 
 

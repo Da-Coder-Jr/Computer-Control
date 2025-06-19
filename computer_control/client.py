@@ -352,6 +352,7 @@ def execute_tool_calls(
     tool_calls: List[Dict[str, Any]],
     dry_run: bool = False,
     secure: bool = False,
+    delay: float = 0.0,
     console: Optional[Any] = None,
 ) -> List[Dict[str, Any]]:
     """Run the tool calls returned by the model and return tool messages."""
@@ -415,6 +416,8 @@ def execute_tool_calls(
                         "content": "skipped",
                     }
                 )
+                if delay > 0:
+                    time.sleep(delay)
                 continue
 
         if dry_run:
@@ -427,6 +430,8 @@ def execute_tool_calls(
                     "content": "dry-run",
                 }
             )
+            if delay > 0:
+                time.sleep(delay)
             continue
 
         try:
@@ -450,5 +455,7 @@ def execute_tool_calls(
                     "content": f"error: {exc}",
                 }
             )
+        if delay > 0:
+            time.sleep(delay)
 
     return results

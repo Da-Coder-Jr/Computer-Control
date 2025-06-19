@@ -37,7 +37,8 @@ available.
    ```
 
    Add `--dry-run` to preview the tool calls without actually executing
-   them. The program asks for confirmation before each action.
+   them. The program asks for confirmation before each action. Use
+   `--delay SECONDS` to pause after each executed command.
 
 3. Run the automated tests (optional):
 
@@ -64,6 +65,9 @@ The program automatically loops until the AI reports it is done. Use
 exact count. The `--history` flag
 controls how many of the most recent messages are sent to the API each loop,
 which helps avoid HTTP 413 errors from oversized requests.
+
+Specify `--delay SECONDS` to wait after each action if your system responds
+slowly.
 
 
 `computer_control.py` lives in the project root, so run it there or provide the
