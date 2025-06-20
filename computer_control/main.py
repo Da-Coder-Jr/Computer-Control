@@ -18,6 +18,7 @@ class PopupUI:
 
     def __init__(self, total_steps: Optional[int]) -> None:
         self.total_steps = total_steps
+        self.root: Optional[tk.Tk]
         try:
             self.root = tk.Tk()
             self.root.title("Computer Control")
@@ -39,6 +40,7 @@ class PopupUI:
                 self.progress.start(10)
             self.update = self._update_gui
             self.done = self._done_gui
+            assert self.root is not None
             self.root.update()
         except Exception:
             self.root = None
@@ -50,16 +52,19 @@ class PopupUI:
         if self.total_steps is not None:
             self.progress["value"] = step
         self.label.config(text=text)
+        assert self.root is not None
         self.root.update()
 
     def _done_gui(self) -> None:
         if self.total_steps is None:
             self.progress.stop()
         self.label.config(text="Done")
+        assert self.root is not None
         self.root.update()
         try:
             messagebox.showinfo("Done", "Goal complete")
         finally:
+            assert self.root is not None
             self.root.destroy()
 
     def _update_console(self, step: int, text: str) -> None:
@@ -110,7 +115,7 @@ def trim_history(
     # remove any assistant message whose tool_calls have missing responses
     while True:
         pending: List[str] = []
-        first_incomplete = None
+        first_incomplete: Optional[int] = None
         for i, msg in enumerate(trimmed):
             if msg.get("tool_calls"):
                 ids = [call.get("id", "") for call in msg["tool_calls"]]
@@ -126,6 +131,7 @@ def trim_history(
             break
 
         # fmt: off
+        assert first_incomplete is not None
         trimmed = trimmed[first_incomplete + 1:]
         # fmt: on
         while trimmed and trimmed[0]["role"] == "tool":

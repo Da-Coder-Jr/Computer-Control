@@ -527,7 +527,7 @@ def test_trim_history_strips_leading_tool_messages():
 def test_trim_history_enforces_limit():
     from computer_control import trim_history  # noqa: E402
 
-    msgs = [{"role": "system", "content": "hi"}]
+    msgs: List[Dict[str, Any]] = [{"role": "system", "content": "hi"}]
     for i in range(4):
         msgs.append({"role": "user", "content": f"u{i}"})
         msgs.append({"role": "assistant", "tool_calls": [{"id": str(i)}]})
