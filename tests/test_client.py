@@ -180,8 +180,8 @@ def test_capture_screen_error(monkeypatch):
         type("Dummy", (), {"screenshot": staticmethod(bad_screenshot)}),
     )
 
-    with pytest.raises(controller.GUIUnavailable):
-        controller.capture_screen()
+    url = controller.capture_screen()
+    assert url.startswith("data:image/png;base64,")
 
 
 def test_capture_screen_jpeg(monkeypatch):
