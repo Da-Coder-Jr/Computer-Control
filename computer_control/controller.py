@@ -10,7 +10,7 @@ import sys
 import shutil
 import tempfile
 import webbrowser
-from typing import List, Dict, Sequence
+from typing import Any, List, Dict, Sequence
 from PIL import Image, ImageGrab
 
 
@@ -24,12 +24,16 @@ class GUIUnavailable(RuntimeError):
     """Raised when GUI actions are requested but unavailable."""
 
 
-def ensure_gui_available() -> None:
+def _get_pyautogui() -> Any:
+    """Return the ``pyautogui`` module or raise ``GUIUnavailable``."""
     if pyautogui is None:
+        raise GUIUnavailable("pyautogui is not available or no GUI environment")
+    return pyautogui
 
-        raise GUIUnavailable(
-            "pyautogui is not available or no GUI environment"
-        )  # noqa: E501
+
+def ensure_gui_available() -> None:
+    """Raise ``GUIUnavailable`` if GUI operations are not possible."""
+    _get_pyautogui()
 
 
 def run_shell(command: str) -> None:
@@ -38,57 +42,57 @@ def run_shell(command: str) -> None:
 
 
 def move_mouse(x: int, y: int) -> None:
-    ensure_gui_available()
-    pyautogui.moveTo(x, y)
+    pg = _get_pyautogui()
+    pg.moveTo(x, y)
 
 
 def click(x: int, y: int, button: str = "left") -> None:
-    ensure_gui_available()
-    pyautogui.click(x=x, y=y, button=button)
+    pg = _get_pyautogui()
+    pg.click(x=x, y=y, button=button)
 
 
 def double_click(x: int, y: int, button: str = "left") -> None:
     """Double-click the mouse at x,y."""
-    ensure_gui_available()
-    pyautogui.doubleClick(x=x, y=y, button=button)
+    pg = _get_pyautogui()
+    pg.doubleClick(x=x, y=y, button=button)
 
 
 def write_text(text: str) -> None:
-    ensure_gui_available()
-    pyautogui.write(text)
+    pg = _get_pyautogui()
+    pg.write(text)
 
 
 def press_key(key: str) -> None:
-    ensure_gui_available()
-    pyautogui.press(key)
+    pg = _get_pyautogui()
+    pg.press(key)
 
 
 def scroll(amount: int) -> None:
     """Scroll the mouse wheel by the given amount."""
-    ensure_gui_available()
-    pyautogui.scroll(amount)
+    pg = _get_pyautogui()
+    pg.scroll(amount)
 
 
 def drag_mouse(
     from_x: int, from_y: int, to_x: int, to_y: int, duration: float = 0.0
 ) -> None:
     """Drag the mouse from one coordinate to another."""
-    ensure_gui_available()
-    pyautogui.moveTo(from_x, from_y)
-    pyautogui.dragTo(to_x, to_y, duration=duration, button="left")
+    pg = _get_pyautogui()
+    pg.moveTo(from_x, from_y)
+    pg.dragTo(to_x, to_y, duration=duration, button="left")
 
 
 def draw_path(points: List[Dict[str, int]], duration: float = 0.0) -> None:
     """Draw by dragging the mouse through a list of x,y coordinates."""
-    ensure_gui_available()
+    pg = _get_pyautogui()
     if not points:
         return
     start = points[0]
-    pyautogui.moveTo(start["x"], start["y"])
-    pyautogui.mouseDown()
+    pg.moveTo(start["x"], start["y"])
+    pg.mouseDown()
     for pt in points[1:]:
-        pyautogui.dragTo(pt["x"], pt["y"], duration=duration, button="left")
-    pyautogui.mouseUp()
+        pg.dragTo(pt["x"], pt["y"], duration=duration, button="left")
+    pg.mouseUp()
 
 
 def open_app(name: str) -> None:
@@ -140,20 +144,20 @@ def delete_file(path: str) -> None:
 
 def key_down(key: str) -> None:
     """Hold down a key until released."""
-    ensure_gui_available()
-    pyautogui.keyDown(key)
+    pg = _get_pyautogui()
+    pg.keyDown(key)
 
 
 def key_up(key: str) -> None:
     """Release a previously held key."""
-    ensure_gui_available()
-    pyautogui.keyUp(key)
+    pg = _get_pyautogui()
+    pg.keyUp(key)
 
 
 def hotkey(keys: Sequence[str]) -> None:
     """Press a combination of keys."""
-    ensure_gui_available()
-    pyautogui.hotkey(*keys)
+    pg = _get_pyautogui()
+    pg.hotkey(*keys)
 
 
 def _fallback_screenshot() -> Image | None:
@@ -188,10 +192,10 @@ def _blank_data_url() -> str:
 
 
 def capture_screen() -> str:
-    ensure_gui_available()
+    pg = _get_pyautogui()
 
     try:
-        image = pyautogui.screenshot()
+        image = pg.screenshot()
 
     except Exception:
         image = _fallback_screenshot()
