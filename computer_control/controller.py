@@ -160,7 +160,7 @@ def hotkey(keys: Sequence[str]) -> None:
     pg.hotkey(*keys)
 
 
-def _fallback_screenshot() -> Image | None:
+def _fallback_screenshot() -> Image.Image | None:
     """Attempt a screenshot using platform utilities."""
     if sys.platform == "darwin":
 
