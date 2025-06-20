@@ -11,7 +11,7 @@ import shutil
 import tempfile
 import webbrowser
 from typing import List, Dict, Sequence
-from PIL import Image, ImageGrab, UnidentifiedImageError
+from PIL import Image, ImageGrab
 
 
 try:
@@ -193,13 +193,10 @@ def capture_screen() -> str:
     try:
         image = pyautogui.screenshot()
 
-    except Exception as exc:
+    except Exception:
         image = _fallback_screenshot()
         if image is None:
-            if isinstance(exc, UnidentifiedImageError):
-                return _blank_data_url()
-            msg = "Failed to capture screen"
-            raise GUIUnavailable(msg) from exc
+            return _blank_data_url()
 
     try:
         max_dim = max(image.size)
