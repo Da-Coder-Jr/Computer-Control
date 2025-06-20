@@ -209,6 +209,7 @@ def main(
         choice = data.get("choices", [{}])[0]
         message = choice.get("message", {})
         tool_calls = message.get("tool_calls")
+        tool_messages: List[Dict[str, Any]] = []
         if tool_calls:
             tool_messages = client.execute_tool_calls(
                 tool_calls, dry_run=dry_run, secure=secure, delay=delay
