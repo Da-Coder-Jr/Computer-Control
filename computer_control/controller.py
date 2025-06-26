@@ -27,7 +27,10 @@ class GUIUnavailable(RuntimeError):
 def _get_pyautogui() -> Any:
     """Return the ``pyautogui`` module or raise ``GUIUnavailable``."""
     if pyautogui is None:
-        raise GUIUnavailable("pyautogui is not available or no GUI environment")
+        raise GUIUnavailable(
+            "pyautogui is not available or "  # noqa: E501
+            "no GUI environment"
+        )
     return pyautogui
 
 
