@@ -114,3 +114,7 @@ your specific setup.
 
 This project is released under the terms of the MIT License; see
 the `LICENSE` file for details.
+
+
+
+Note: I really like python computer_control.py "go to {browser} and open google docs - write a poem about {topic}"
