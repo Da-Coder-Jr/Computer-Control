@@ -119,5 +119,6 @@ the `LICENSE` file for details.
 
 Note: I really like:
 
-```python computer_control.py "go to {browser} and open google docs - write a poem about {topic}"
+```python
+python computer_control.py "go to {browser} and open google docs - write a poem about {topic}"
 ```
