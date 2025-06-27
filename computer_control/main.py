@@ -105,6 +105,7 @@ def trim_history(
     trimmed = msgs[start:]
 
     def clean(seq: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+
         """Return ``seq`` with incomplete assistant/tool pairs removed."""
 
         # drop trailing assistant messages that contain tool_calls
@@ -144,6 +145,7 @@ def trim_history(
         while seq and seq[0]["role"] not in ("system", "user"):
             seq.pop(0)
 
+
         return seq
 
     trimmed = clean(trimmed)
@@ -151,6 +153,7 @@ def trim_history(
     if len(trimmed) > limit:
         trimmed = trimmed[-limit:]
         trimmed = clean(trimmed)
+
 
     return trimmed
 

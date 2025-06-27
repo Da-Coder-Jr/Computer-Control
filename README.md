@@ -60,8 +60,9 @@ Run the script **from the repository root** with a goal:
 python computer_control.py "open calculator"
 ```
 
-The program automatically loops until the AI reports it is done. Use
-`--max-steps` to cap the number of iterations or `--steps N` to force an
+The program automatically loops until the AI reports it is done. By default
+there is no step limit (`--steps auto` and `--max-steps 0`). Use
+`--max-steps` to cap the iterations or `--steps N` to force an
 exact count. The `--history` flag
 controls how many of the most recent messages are sent to the API each loop,
 which helps avoid HTTP 413 errors from oversized requests.
