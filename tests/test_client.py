@@ -562,6 +562,30 @@ def test_trim_history_keeps_complete_pairs(monkeypatch):
     assert trimmed == msgs[:5]
 
 
+def test_trim_history_multi_tool_call_partial():
+    from computer_control import trim_history  # noqa: E402
+
+    msgs = [
+        {"role": "system", "content": "hi"},
+        {"role": "user", "content": "goal"},
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {"id": "1"},
+                {"id": "2"},
+                {"id": "3"},
+            ],
+        },
+        {"role": "tool", "tool_call_id": "1", "content": "ok"},
+        {"role": "tool", "tool_call_id": "2", "content": "ok"},
+        {"role": "tool", "tool_call_id": "3", "content": "ok"},
+        {"role": "user", "content": "next"},
+    ]
+
+    trimmed = trim_history(msgs, 5)
+    assert trimmed == [{"role": "user", "content": "next"}]
+
+
 def test_main_save_dir(monkeypatch, tmp_path):
     from computer_control import main as cc_main
     from computer_control import controller, client
