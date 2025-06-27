@@ -104,73 +104,48 @@ def trim_history(
         start += 1
     trimmed = msgs[start:]
 
-    def clean(seq: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Remove invalid assistant/tool pairs from ``seq``."""
-
-        # drop trailing assistant messages that contain tool_calls
-        while seq and seq[-1].get("tool_calls"):
-            seq.pop()
-
-        # drop leading tool messages without a preceding assistant
-        while seq and seq[0]["role"] == "tool":
+        """Return ``seq`` with incomplete assistant/tool pairs removed."""
+        # ensure sequence starts with system or user
+        while seq and seq[0]["role"] not in ("system", "user"):
             seq.pop(0)
 
-        # remove any assistant message whose tool_calls lack responses
-        while True:
-            pending: List[str] = []
-            first_incomplete: Optional[int] = None
-            for i, msg in enumerate(seq):
-                if msg.get("tool_calls"):
-                    ids = [c.get("id", "") for c in msg["tool_calls"]]
-                    pending.extend(ids)
-                    if first_incomplete is None:
-                        first_incomplete = i
-                else:
-                    call_id = msg.get("tool_call_id")
-                    if call_id and call_id in pending:
-                        pending.remove(call_id)
-                        if not pending:
-                            first_incomplete = None
+    while trimmed and trimmed[-1].get("tool_calls"):
+        trimmed.pop()
 
-            if not pending:
-                break
+    # drop leading tool messages without a preceding assistant
+    while trimmed and trimmed[0]["role"] == "tool":
+        trimmed.pop(0)
 
-            assert first_incomplete is not None
-            seq = seq[first_incomplete + 1 :]  # noqa: E203
-            while seq and seq[0]["role"] == "tool":
-                seq.pop(0)
+    # remove any assistant message whose tool_calls have missing responses
+    while True:
+        pending: List[str] = []
+        first_incomplete: Optional[int] = None
+        for i, msg in enumerate(trimmed):
+            if msg.get("tool_calls"):
+                ids = [call.get("id", "") for call in msg["tool_calls"]]
+                pending.extend(ids)
+                if first_incomplete is None:
+                    first_incomplete = i
+            elif msg.get("tool_call_id") and msg["tool_call_id"] in pending:
+                pending.remove(msg["tool_call_id"])
+                if not pending:
+                    first_incomplete = None
 
-        return seq
+        if not pending:
+            break
 
-    trimmed = clean(trimmed)
+        # fmt: off
+        assert first_incomplete is not None
+        trimmed = trimmed[first_incomplete + 1:]
+        # fmt: on
+        while trimmed and trimmed[0]["role"] == "tool":
+            trimmed.pop(0)
 
+    # enforce the limit strictly
     if len(trimmed) > limit:
         trimmed = trimmed[-limit:]
-        trimmed = clean(trimmed)
-
-
-        # re-check for incomplete tool call pairs after trimming
-        while True:
-            pending: List[str] = []
-            first_incomplete: Optional[int] = None
-            for i, msg in enumerate(trimmed):
-                if msg.get("tool_calls"):
-                    ids = [c.get("id", "") for c in msg["tool_calls"]]
-                    pending.extend(ids)
-                    if first_incomplete is None:
-                        first_incomplete = i
-                elif msg.get("tool_call_id") and msg["tool_call_id"] in pending:
-                    pending.remove(msg["tool_call_id"])
-                    if not pending:
-                        first_incomplete = None
-
-            if not pending:
-                break
-
-            assert first_incomplete is not None
-            trimmed = trimmed[first_incomplete + 1 :]
-            while trimmed and trimmed[0]["role"] == "tool":
-                trimmed.pop(0)
+        while trimmed and trimmed[0]["role"] == "tool":
+            trimmed.pop(0)
 
     return trimmed
 
