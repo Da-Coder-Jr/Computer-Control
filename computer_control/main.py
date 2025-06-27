@@ -105,7 +105,8 @@ def trim_history(
     trimmed = msgs[start:]
 
     def clean(seq: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Remove invalid assistant/tool pairs from ``seq``."""
+
+        """Return ``seq`` with incomplete assistant/tool pairs removed."""
 
         # drop trailing assistant messages that contain tool_calls
         while seq and seq[-1].get("tool_calls"):
@@ -140,6 +141,11 @@ def trim_history(
             while seq and seq[0]["role"] == "tool":
                 seq.pop(0)
 
+        # ensure sequence starts with system or user
+        while seq and seq[0]["role"] not in ("system", "user"):
+            seq.pop(0)
+
+
         return seq
 
     trimmed = clean(trimmed)
@@ -148,29 +154,6 @@ def trim_history(
         trimmed = trimmed[-limit:]
         trimmed = clean(trimmed)
 
-
-        # re-check for incomplete tool call pairs after trimming
-        while True:
-            pending: List[str] = []
-            first_incomplete: Optional[int] = None
-            for i, msg in enumerate(trimmed):
-                if msg.get("tool_calls"):
-                    ids = [c.get("id", "") for c in msg["tool_calls"]]
-                    pending.extend(ids)
-                    if first_incomplete is None:
-                        first_incomplete = i
-                elif msg.get("tool_call_id") and msg["tool_call_id"] in pending:
-                    pending.remove(msg["tool_call_id"])
-                    if not pending:
-                        first_incomplete = None
-
-            if not pending:
-                break
-
-            assert first_incomplete is not None
-            trimmed = trimmed[first_incomplete + 1 :]
-            while trimmed and trimmed[0]["role"] == "tool":
-                trimmed.pop(0)
 
     return trimmed
 
