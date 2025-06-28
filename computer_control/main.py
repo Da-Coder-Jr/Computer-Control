@@ -105,7 +105,6 @@ def trim_history(
     trimmed = msgs[start:]
 
     def clean(seq: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-
         """Return ``seq`` with incomplete assistant/tool pairs removed."""
 
         # drop trailing assistant messages that contain tool_calls
@@ -145,7 +144,6 @@ def trim_history(
         while seq and seq[0]["role"] not in ("system", "user"):
             seq.pop(0)
 
-
         return seq
 
     trimmed = clean(trimmed)
@@ -154,8 +152,22 @@ def trim_history(
         trimmed = trimmed[-limit:]
         trimmed = clean(trimmed)
 
-
     return trimmed
+
+
+def validate_history(msgs: List[Dict[str, Any]]) -> None:
+    """Ensure ``msgs`` contains no unfinished tool calls."""
+
+    pending: List[str] = []
+    for msg in msgs:
+        if msg.get("tool_calls"):
+            pending.extend(c.get("id", "") for c in msg["tool_calls"])
+        else:
+            call_id = msg.get("tool_call_id")
+            if call_id and call_id in pending:
+                pending.remove(call_id)
+    if pending:
+        raise ValueError(f"missing tool responses for: {', '.join(pending)}")
 
 
 def main(
@@ -212,7 +224,9 @@ def main(
     while True:
 
         try:
-            data = client.query_pollinations(trim_history(messages, history))
+            batch = trim_history(messages, history)
+            validate_history(batch)
+            data = client.query_pollinations(batch)
         except RuntimeError as exc:
             if "413" in str(exc) and history > 1:
                 history = max(1, history // 2)

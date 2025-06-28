@@ -641,3 +641,27 @@ def test_main_retries_on_413(monkeypatch):
 
     cc_main("goal", steps=1, dry_run=True, history=4)
     assert calls["count"] == 2
+
+
+def test_validate_history_ok():
+    from computer_control.main import validate_history
+
+    msgs = [
+        {"role": "system", "content": "hi"},
+        {"role": "assistant", "tool_calls": [{"id": "1"}]},
+        {"role": "tool", "tool_call_id": "1", "content": "ok"},
+    ]
+
+    validate_history(msgs)
+
+
+def test_validate_history_error():
+    from computer_control.main import validate_history
+
+    msgs = [
+        {"role": "assistant", "tool_calls": [{"id": "1"}]},
+        {"role": "user", "content": "next"},
+    ]
+
+    with pytest.raises(ValueError):
+        validate_history(msgs)
